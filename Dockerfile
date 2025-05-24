@@ -6,7 +6,7 @@
     RUN apk add --no-cache curl bash
     
     # Instala pnpm globalmente
-    RUN npm install -g pnpm@8.14.0
+    RUN npm install -g pnpm@10.10.0
     COPY package.json pnpm-lock.yaml ./
     RUN pnpm install --frozen-lockfile
     
@@ -20,7 +20,7 @@
     # Instala pacotes adicionais no ambiente de produção
     RUN apk add --no-cache curl bash
     
-    RUN npm install -g pnpm@8.14.0
+    RUN npm install -g pnpm@10.10.0
     COPY package.json pnpm-lock.yaml ./
     RUN pnpm install --prod --frozen-lockfile
     

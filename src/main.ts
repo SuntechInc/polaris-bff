@@ -12,7 +12,6 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
 
-  app.setGlobalPrefix('/api');
 
   setupSwagger(app);
 

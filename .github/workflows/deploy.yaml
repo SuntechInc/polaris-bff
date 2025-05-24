@@ -53,9 +53,15 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # aponte para o kubeconfig no servidor
-            export KUBECONFIG=/home/devops/.kube/config
-
+            # Configuração do kubectl
+            export KUBECONFIG=/home/ci-deploy/.kube/config
+            
+            # Verifica se o cluster está acessível
+            if ! kubectl cluster-info &> /dev/null; then
+              echo "Erro: Não foi possível conectar ao cluster Kubernetes"
+              exit 1
+            fi
+            
             if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
               NAMESPACE=bff-prod
               IMAGE_TAG=latest
@@ -63,10 +69,22 @@ jobs:
               NAMESPACE=bff-homolog
               IMAGE_TAG=develop
             fi
-
+            
             DEPLOYMENT=aurora-bff
             
             echo "Restarting $DEPLOYMENT in namespace $NAMESPACE to pull :$IMAGE_TAG"
+            
+            # Verifica se o namespace existe
+            if ! kubectl get namespace $NAMESPACE &> /dev/null; then
+              echo "Erro: Namespace $NAMESPACE não encontrado"
+              exit 1
+            fi
+            
+            # Verifica se o deployment existe
+            if ! kubectl get deployment $DEPLOYMENT -n $NAMESPACE &> /dev/null; then
+              echo "Erro: Deployment $DEPLOYMENT não encontrado no namespace $NAMESPACE"
+              exit 1
+            fi
             
             kubectl rollout restart deployment/${DEPLOYMENT} -n ${NAMESPACE}
             

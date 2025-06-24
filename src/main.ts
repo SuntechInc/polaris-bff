@@ -3,6 +3,7 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+import fastifyCors from '@fastify/cors';
 import { GatewayModule } from './gateway.module';
 import { setupSwagger } from './config/swagger.config';
 
@@ -15,8 +16,12 @@ async function bootstrap() {
 
   setupSwagger(app);  
 
-  // app.setGlobalPrefix('api');
-  app.enableCors();
+ 
+  await app.register(fastifyCors, {
+    origin: '*',                    // qualquer domínio pode chamar
+    methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+    allowedHeaders: ['*'],          // todos os headers são permitidos
+  });
 
   const PORT = process.env.PORT || 3000;
   

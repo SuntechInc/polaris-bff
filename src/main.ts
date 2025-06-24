@@ -13,11 +13,14 @@ async function bootstrap() {
   );
 
 
-  setupSwagger(app);
+  setupSwagger(app);  
+
+  // app.setGlobalPrefix('api');
+  app.enableCors();
 
   const PORT = process.env.PORT || 3000;
   
   await app.listen(PORT, '0.0.0.0');
-  console.log(`🚀 Polaris API Gateway is running on http://localhost:3000`);
+  console.log(`🚀 Polaris API Gateway is running`);
 }
 bootstrap();

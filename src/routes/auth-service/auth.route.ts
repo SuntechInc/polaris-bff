@@ -26,9 +26,11 @@ export class AuthController {
         const response = await firstValueFrom(
           this.httpService.post(`${this.authUrl}/auth/login`, credentials)
         );
-        return response;
-      } catch (error) {
-        throw new HttpException(error.response.data, error.response.status);
+        return response.data;
+      } catch (error: any) {
+        const status = error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR;
+        const payload = error.response?.data || { message: 'Unknown error' };
+        throw new HttpException(payload, status);
       }
     }
 }

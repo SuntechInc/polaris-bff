@@ -7,12 +7,11 @@ import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true,
-      envFilePath: [
-       `.env.${process.env.NODE_ENV}`,
-       '.env'
-      ]
-     },),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: process.env.NODE_ENV === 'local' ? '.env.local' : undefined,
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
+    }),
     HttpModule,
     BffModule],
   controllers: [GatewayController, HealthController],

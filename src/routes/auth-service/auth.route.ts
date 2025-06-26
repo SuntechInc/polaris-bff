@@ -1,8 +1,8 @@
 import { HttpService } from "@nestjs/axios";
-import { Body, Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpException, HttpStatus, Post } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { map, Observable } from "rxjs";
+import {firstValueFrom } from "rxjs";
 import { CredentialDto } from "./dto/credential.dto";
 
 
@@ -21,12 +21,14 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @Post('login')
     @HttpCode(HttpStatus.OK)
-    login(@Body() credentials: CredentialDto): Observable<any> {
-      // encaminha para http://<auth-service>/login
-      return this.httpService
-        .post(`${this.authUrl}/auth/login`, credentials)
-        .pipe(
-          map(response => response.data)
+    async login(@Body() credentials: CredentialDto): Promise<any> {
+      try {
+        const response = await firstValueFrom(
+          this.httpService.post(`${this.authUrl}/auth/login`, credentials)
         );
+        return response;
+      } catch (error) {
+        throw new HttpException(error.response.data, error.response.status);
+      }
     }
 }

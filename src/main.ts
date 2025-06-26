@@ -18,14 +18,15 @@ async function bootstrap() {
 
  
   await app.register(fastifyCors, {
-    origin: '*',                    // qualquer domínio pode chamar
-    methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
-    allowedHeaders: ['*'],          // todos os headers são permitidos
+    origin: true,                    // qualquer domínio pode chamar
+    credentials: true,            // todos os headers são permitidos
   });
 
   const PORT = process.env.PORT || 3000;
   
   await app.listen(PORT, '0.0.0.0');
+  const NODE_ENV = process.env.NODE_ENV ?? 'undefined';
+  console.log(`➡️  NODE_ENV = ${NODE_ENV}`);
   console.log(`🚀 Polaris API Gateway is running`);
 }
 bootstrap();

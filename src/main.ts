@@ -26,7 +26,10 @@ async function bootstrap() {
   
   await app.listen(PORT, '0.0.0.0');
   const NODE_ENV = process.env.NODE_ENV ?? 'undefined';
+  const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL ?? 'undefined';
   console.log(`➡️  NODE_ENV = ${NODE_ENV}`);
+  console.log(`➡️  AUTH_SERVICE_URL = ${AUTH_SERVICE_URL}`);
+
   console.log(`🚀 Polaris API Gateway is running`);
 }
 bootstrap();

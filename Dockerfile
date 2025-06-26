@@ -1,33 +1,29 @@
-# ---------- STAGE 1 : build ----------
-    FROM node:22-alpine AS builder
+# ---- STAGE 1: Build ----
+    FROM node:22.13.1-alpine AS builder
     WORKDIR /app
     
-    # 1. Instala pnpm uma única vez
-    RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
+    # Instala pacotes adicionais (curl, bash)
+    RUN apk add --no-cache curl bash
     
-    # 2. Instala dependências **dev + prod**
+    # Instala pnpm globalmente
+    RUN npm install -g pnpm@10.10.0
     COPY package.json pnpm-lock.yaml ./
     RUN pnpm install --frozen-lockfile
     
-    # 3. Copia código e gera /dist
     COPY . .
-    RUN pnpm run build            # -> dist/
+    RUN pnpm run build
     
-    # ---------- STAGE 2 : runtime ----------
+    # ---- STAGE 2: Production ----
     FROM node:22-alpine
     WORKDIR /app
-    
-    # 4. Habilita pnpm apenas se precisar exec-time (não obrigatório)
     RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
-    
-    # 5. Copia artefatos mínimos
+        
     COPY package.json pnpm-lock.yaml ./
-    COPY --from=builder /app/node_modules ./node_modules   # já contém só prod deps
+    RUN pnpm install --prod --frozen-lockfile --ignore-scripts        # só deps prod
+        
     COPY --from=builder /app/dist ./dist
-    
-    # 6. Define ambiente e porta
+        
     ENV NODE_ENV=production
     EXPOSE 3000
-    
     CMD ["node", "dist/src/main.js"]
     

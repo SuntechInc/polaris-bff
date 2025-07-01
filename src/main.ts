@@ -6,6 +6,7 @@ import {
 import fastifyCors from '@fastify/cors';
 import { GatewayModule } from './gateway.module';
 import { setupSwagger } from './config/swagger.config';
+import { JwtAuthGuard } from './guards/jwt.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -13,6 +14,9 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
 
+  // Configurar guard JWT global para todas as rotas
+  const jwtGuard = app.get(JwtAuthGuard);
+  app.useGlobalGuards(jwtGuard);
 
   setupSwagger(app);  
 

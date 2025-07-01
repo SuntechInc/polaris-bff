@@ -1,10 +1,12 @@
 import { HttpService } from "@nestjs/axios";
-import { Body, Controller, HttpCode, HttpException, HttpStatus, Post } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpException, HttpStatus, Post, Get, UseGuards } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import {firstValueFrom } from "rxjs";
+import { ApiOperation, ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { firstValueFrom } from "rxjs";
 import { CredentialDto } from "./dto/credential.dto";
-
+import { AdminGuard } from "../../guards/admin.guard";
+import { CurrentUser } from "../../decorators/user.decorator";
+import { UserPayload } from "../../interfaces/user.interface";
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -17,10 +19,10 @@ export class AuthController {
     ) {
         this.authUrl = this.configService.get<string>('AUTH_SERVICE_URL');
     }
+
     @ApiOperation({ summary: 'Login' })
     @HttpCode(HttpStatus.OK)
     @Post('login')
-    @HttpCode(HttpStatus.OK)
     async login(@Body() credentials: CredentialDto): Promise<any> {
       try {
         const response = await firstValueFrom(
@@ -32,5 +34,32 @@ export class AuthController {
         const payload = error.response?.data || { message: 'Unknown error' };
         throw new HttpException(payload, status);
       }
+    }
+
+    @ApiOperation({ summary: 'Perfil do usuário - qualquer usuário autenticado' })
+    @ApiBearerAuth()
+    @Get('profile')
+    async getProfile(@CurrentUser() user: UserPayload) {
+        return {
+            message: 'Perfil do usuário',
+            user: {
+                id: user.sub,
+                email: user.email,
+                userType: user.userType,
+                companyId: user.companyId,
+                actionCompanyId: user.actionCompanyId
+            }
+        };
+    }
+
+    @ApiOperation({ summary: 'Rota apenas para GLOBAL_ADMIN' })
+    @ApiBearerAuth()
+    @UseGuards(AdminGuard)
+    @Get('admin-only')
+    async adminOnlyRoute(@CurrentUser() user: UserPayload) {
+        return {
+            message: 'Acesso permitido apenas para GLOBAL_ADMIN',
+            user: user
+        };
     }
 }

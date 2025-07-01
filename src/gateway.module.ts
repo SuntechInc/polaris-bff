@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { GatewayController } from './gateway.controller';
 import { BffModule } from './routes/bff.module';
 import { HealthController } from './healthz/healthz.controller';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
+import { JwtModule } from '@nestjs/jwt';
+import { getJwtConfig } from './config/jwt.config';
 
 @Module({
   imports: [
@@ -13,6 +15,11 @@ import { HttpModule } from '@nestjs/axios';
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
     HttpModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: getJwtConfig,
+      inject: [ConfigService],
+    }),
     BffModule],
   controllers: [GatewayController, HealthController],
   providers: [],

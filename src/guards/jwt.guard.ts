@@ -23,7 +23,7 @@ export class JwtAuthGuard implements CanActivate {
       return true;
     }
 
-    const token = this.extractTokenFromHeader(request);
+    const token = this.extractTokenFromRequest(request);
 
     if (!token) {
       throw new UnauthorizedException('Token não fornecido');
@@ -38,8 +38,48 @@ export class JwtAuthGuard implements CanActivate {
     }
   }
 
+  private extractTokenFromRequest(request: any): string | undefined {
+    // Primeiro tenta extrair do header Authorization
+    const authHeader = this.extractTokenFromHeader(request);
+    if (authHeader) {
+      return authHeader;
+    }
+
+    // Se não encontrar no header, tenta extrair do cookie
+    const cookieToken = this.extractTokenFromCookie(request);
+    if (cookieToken) {
+      return cookieToken;
+    }
+
+    return undefined;
+  }
+
   private extractTokenFromHeader(request: any): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
+  }
+
+  private extractTokenFromCookie(request: any): string | undefined {
+    // Verifica se existe cookie 'auth'
+    const authCookie = request.cookies?.auth;
+    if (authCookie) {
+      return authCookie;
+    }
+
+    // Se não encontrar cookie 'auth', tenta extrair de outros cookies
+    // Pode ser necessário ajustar conforme o formato do seu cookie
+    const allCookies = request.headers.cookie;
+    if (allCookies) {
+      const cookies = allCookies.split(';').reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        acc[key] = value;
+        return acc;
+      }, {});
+      
+      // Tenta encontrar token em diferentes formatos de cookie
+      return cookies.auth || cookies.token || cookies.jwt;
+    }
+
+    return undefined;
   }
 }

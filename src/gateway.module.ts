@@ -6,6 +6,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { JwtModule } from '@nestjs/jwt';
 import { getJwtConfig } from './config/jwt.config';
+import { JwtAuthGuard } from './guards/jwt.guard';
+import { AdminGuard } from './guards/admin.guard';
 
 @Module({
   imports: [
@@ -22,6 +24,6 @@ import { getJwtConfig } from './config/jwt.config';
     }),
     BffModule],
   controllers: [GatewayController, HealthController],
-  providers: [],
+  providers: [JwtAuthGuard, AdminGuard],
 })
 export class GatewayModule {}

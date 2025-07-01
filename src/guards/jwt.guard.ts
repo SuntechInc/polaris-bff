@@ -8,6 +8,21 @@ export class JwtAuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
+    
+    // Lista de rotas que não precisam de autenticação
+    const publicRoutes = [
+      '/healthz',
+      '/auth/login',
+      '/docs',
+      'api-docs'
+    ];
+    
+    // Verifica se a rota atual está na lista de rotas públicas
+    const currentRoute = request.route?.path || request.url;
+    if (publicRoutes.some(route => currentRoute.includes(route))) {
+      return true;
+    }
+
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {

@@ -4,6 +4,7 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import fastifyCors from '@fastify/cors';
+import fastifyCookie from '@fastify/cookie';
 import { GatewayModule } from './gateway.module';
 import { setupSwagger } from './config/swagger.config';
 import { JwtAuthGuard } from './guards/jwt.guard';
@@ -20,10 +21,15 @@ async function bootstrap() {
 
   setupSwagger(app);  
 
- 
+  // Configurar CORS
   await app.register(fastifyCors, {
     origin: true,                    // qualquer domínio pode chamar
     credentials: true,            // todos os headers são permitidos
+  });
+
+  // Configurar cookie parser
+  await app.register(fastifyCookie, {
+    secret: process.env.IRON_SESSION_SECRET || '12345678901234567890123456789012', // opcional, para cookies assinados
   });
 
   const PORT = process.env.PORT || 3000;

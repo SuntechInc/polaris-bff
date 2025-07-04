@@ -7,13 +7,17 @@ import {
   Post,
   Query,
   UseGuards,
+  Param,
+  // Res, // Removido
+  HttpException,
 } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { CreateCompanyGatewayDto } from './dto/create-company.dto';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags, ApiParam } from '@nestjs/swagger';
 import { AdminGuard } from '../../guards/admin.guard';
+// import { Response } from 'express'; // Removido
 
 @ApiTags('Company')
 @Controller()
@@ -47,6 +51,25 @@ export class CompanyController {
       this.httpService.get(`${this.coreServiceUrl}/companies`, { params }),
     );
     return response.data;
+  }
+
+  @ApiOperation({ summary: 'Buscar empresa por TaxId - Apenas GLOBAL_ADMIN' })
+  @ApiParam({ name: 'taxId', type: String, example: '0000000000000', description: 'CNPJ ou identificador da empresa' })
+  @UseGuards(AdminGuard)
+  @Get('companies/search/:taxId')
+  async findByTaxId(@Param('taxId') taxId: string) {
+   
+    const cleanTaxId = taxId.replace(/\D/g, '');
+    try {
+      const coreResponse = await firstValueFrom(
+        this.httpService.get(`${this.coreServiceUrl}/companies/search/${cleanTaxId}`)
+      );
+      return coreResponse.data;
+    } catch (error: any) {
+      const status = error.response?.status || HttpStatus.BAD_REQUEST;
+      const message = error.response?.data?.message || 'Erro ao buscar empresa';
+      throw new HttpException({ message }, status);
+    }
   }
 
   @ApiOperation({ summary: 'Create a new company - Apenas GLOBAL_ADMIN' })

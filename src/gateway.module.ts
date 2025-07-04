@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { GatewayController } from './gateway.controller';
 import { BffModule } from './routes/bff.module';
 import { HealthController } from './healthz/healthz.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -23,7 +22,7 @@ import { AdminGuard } from './guards/admin.guard';
       inject: [ConfigService],
     }),
     BffModule],
-  controllers: [GatewayController, HealthController],
+  controllers: [HealthController],
   providers: [JwtAuthGuard, AdminGuard],
 })
 export class GatewayModule {}

@@ -18,8 +18,6 @@ export class IronSessionService {
     this.ttl = 60 * 60 * 24 * 7; // 7 dias
     this.isProduction = this.configService.get<string>('NODE_ENV') === 'production';
     
-    console.log(`🔧 [IronSessionService] Secret configurado: ${this.secret.substring(0, 10)}...`);
-    console.log(`🔧 [IronSessionService] Ambiente: ${this.isProduction ? 'production' : 'development'}`);
   }
 
   async decryptCookie(cookieValue: string): Promise<string | null> {

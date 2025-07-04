@@ -11,9 +11,7 @@ export class JwtAuthGuard implements CanActivate {
     private ironSessionService: IronSessionService,
     private configService: ConfigService
   ) {
-    // Log do JWT_SECRET sendo usado
-    const jwtSecret = this.configService.get<string>('JWT_SECRET') || 'secret';
-    console.log(`🔧 [JwtAuthGuard] JWT_SECRET configurado: ${jwtSecret}`);
+    this.configService.get<string>('JWT_SECRET') || 'secret';
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

@@ -5,28 +5,51 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { CreateCompanyGatewayDto } from './dto/create-company.dto';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AdminGuard } from '../../guards/admin.guard';
 
 @ApiTags('Company')
-@Controller() // 🔥 Adiciona um prefixo para manter consistência na API
+@Controller()
 export class CompanyController {
-  constructor(private httpService: HttpService) {}
+  private readonly coreServiceUrl: string;
 
-  @ApiOperation({ summary: 'Get all companies' })
+  constructor(
+    private httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    this.coreServiceUrl = this.configService.get<string>('CORE_SERVICE_URL');
+  }
+
+  @ApiOperation({ summary: 'Get all companies - Apenas GLOBAL_ADMIN' })
+  @UseGuards(AdminGuard)
   @HttpCode(HttpStatus.OK)
   @Get('companies')
-  async getCompanies() {
+  async getCompanies(
+    @Query('page') page?: number,
+    @Query('size') size?: number,
+    @Query('take') take?: number,
+    @Query('skip') skip?: number,
+  ) {
+    const params: any = {};
+    if (page !== undefined) params.page = page;
+    if (size !== undefined) params.size = size;
+    if (take !== undefined) params.take = take;
+    if (skip !== undefined) params.skip = skip;
+
     const response = await firstValueFrom(
-      this.httpService.get('http://localhost:3333/api/companies'),
+      this.httpService.get(`${this.coreServiceUrl}/companies`, { params }),
     );
     return response.data;
   }
 
-  @ApiOperation({ summary: 'Create a new company' })
+  @ApiOperation({ summary: 'Create a new company - Apenas GLOBAL_ADMIN' })
   @ApiBody({
     type: CreateCompanyGatewayDto,
     examples: {
@@ -49,7 +72,7 @@ export class CompanyController {
   @HttpCode(HttpStatus.CREATED)
   async createCompany(@Body() dto: CreateCompanyGatewayDto) {
     const response = await firstValueFrom(
-      this.httpService.post('http://localhost:3333/api/companies', dto),
+      this.httpService.post(`${this.coreServiceUrl}/companies`, dto),
     );
     return response.data;
   }

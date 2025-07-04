@@ -10,6 +10,7 @@ import {
   Param,
   // Res, // Removido
   HttpException,
+  Put,
 } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
@@ -72,7 +73,26 @@ export class CompanyController {
     }
   }
 
+  @ApiOperation({ summary: 'Buscar empresa por nome - Apenas GLOBAL_ADMIN' })
+  @ApiParam({ name: 'name', type: String, example: 'quali', description: 'Nome (ou parte do nome) da empresa' })
+  @UseGuards(AdminGuard)
+  @Get('companies/search/name/:name')
+  async findByName(@Param('name') name: string) {
+    try {
+      const coreResponse = await firstValueFrom(
+        this.httpService.get(`${this.coreServiceUrl}/companies/search/name/${encodeURIComponent(name)}`)
+      );
+      return coreResponse.data;
+    } catch (error: any) {
+      const status = error.response?.status || HttpStatus.BAD_REQUEST;
+      const message = error.response?.data?.message || 'Erro ao buscar empresa por nome';
+      throw new HttpException({ message }, status);
+    }
+  }
+
   @ApiOperation({ summary: 'Create a new company - Apenas GLOBAL_ADMIN' })
+  @UseGuards(AdminGuard)
+
   @ApiBody({
     type: CreateCompanyGatewayDto,
     examples: {
@@ -92,11 +112,51 @@ export class CompanyController {
     },
   })
   @Post('company')
+  @UseGuards(AdminGuard)
   @HttpCode(HttpStatus.CREATED)
   async createCompany(@Body() dto: CreateCompanyGatewayDto) {
     const response = await firstValueFrom(
       this.httpService.post(`${this.coreServiceUrl}/companies`, dto),
     );
     return response.data;
+  }
+
+  @ApiOperation({ summary: 'Atualizar empresa - Apenas GLOBAL_ADMIN' })
+  @ApiParam({ name: 'id', type: String, example: '123', description: 'ID da empresa' })
+  @ApiBody({
+    type: CreateCompanyGatewayDto,
+    examples: {
+      example1: {
+        summary: 'Exemplo de atualização',
+        value: {
+          tradingName: 'Empresa Atualizada',
+          legalName: 'Empresa Atualizada LTDA',
+          taxId: '12345678000199',
+          email: 'novoemail@empresa.com',
+          phone: '+55 11 98888-8888',
+          industry: 'HEALTHCORE',
+          segment: 'LABORATORY',
+          isActive: true,
+        },
+      },
+    },
+  })
+  @UseGuards(AdminGuard)
+  @HttpCode(HttpStatus.OK)
+  @Put('companies/:id')
+  async updateCompany(
+    @Param('id') id: string,
+    @Body() dto: CreateCompanyGatewayDto
+  ) {
+    try {
+      const coreResponse = await firstValueFrom(
+        this.httpService.put(`${this.coreServiceUrl}/companies/${id}`, dto)
+      );
+      return coreResponse.data;
+    } catch (error: any) {
+      const status = error.response?.status || HttpStatus.BAD_REQUEST;
+      const message = error.response?.data?.message || 'Erro ao atualizar empresa';
+      throw new HttpException({ message }, status);
+    }
   }
 }

@@ -5,10 +5,12 @@ import { CompanyController } from './core-service/company.routes';
 import { AuthController } from './auth-service/auth.route';
 import { AdminController } from './admin/admin.controller';
 import { IronSessionService } from '../services/iron-session.service';
+import { DepartmentController } from './core-service/departments.route';
+import { BranchController } from './core-service/branch.routes';
 
 @Module({
   imports: [HttpModule],
-  controllers: [CompanyController, AuthController, AdminController],
+  controllers: [CompanyController, BranchController ,  DepartmentController, AuthController, AdminController],
   providers: [IronSessionService],
   exports: [IronSessionService],
 })

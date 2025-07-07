@@ -3,146 +3,121 @@ import { JwtService } from '@nestjs/jwt';
 import { UserPayload } from '../interfaces/user.interface';
 import { IronSessionService } from '../services/iron-session.service';
 import { ConfigService } from '@nestjs/config';
+import { CustomLogger } from '../custom.logger';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
+  private readonly jwtSecret: string;
+
   constructor(
     private jwtService: JwtService,
     private ironSessionService: IronSessionService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private readonly logger: CustomLogger,
   ) {
-    this.configService.get<string>('JWT_SECRET') || 'secret';
+    this.jwtSecret = this.configService.get<string>('JWT_SECRET') || 'secret';
+    this.logger.log(`JWT_SECRET configurado: ${this.jwtSecret.substring(0, 10)}...`, 'JwtAuthGuard');
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    
-    // Lista de rotas que não precisam de autenticação
     const publicRoutes = [
       '/healthz',
       '/auth/login',
       '/auth/test-iron-session',
       '/docs',
-      'api-docs'
+      'api-docs',
     ];
-    
-    // Verifica se a rota atual está na lista de rotas públicas
     const currentRoute = request.route?.path || request.url;
     const method = request.method;
-    
-    console.log(`🔍 [JwtAuthGuard] Verificando rota: ${method} ${currentRoute}`);
-    console.log(`🔍 [JwtAuthGuard] URL completa: ${request.url}`);
-    console.log(`🔍 [JwtAuthGuard] Headers:`, JSON.stringify(request.headers, null, 2));
-    
+    this.logger.debug(`[JwtAuthGuard] Verificando rota: ${method} ${currentRoute}`, 'JwtAuthGuard');
+    this.logger.debug(`[JwtAuthGuard] URL completa: ${request.url}`, 'JwtAuthGuard');
+    this.logger.debug(`[JwtAuthGuard] Headers: ${JSON.stringify(request.headers, null, 2)}`, 'JwtAuthGuard');
     if (publicRoutes.some(route => currentRoute.includes(route))) {
-      console.log(`✅ [JwtAuthGuard] Rota pública detectada: ${currentRoute}`);
+      this.logger.debug(`[JwtAuthGuard] Rota pública detectada: ${currentRoute}`, 'JwtAuthGuard');
       return true;
     }
-
-    console.log(`🔐 [JwtAuthGuard] Rota protegida, verificando autenticação...`);
-
+    this.logger.debug(`[JwtAuthGuard] Rota protegida, verificando autenticação...`, 'JwtAuthGuard');
     const token = await this.extractTokenFromRequest(request);
-
     if (!token) {
-      console.log(`❌ [JwtAuthGuard] Token não encontrado`);
+      this.logger.error(`[JwtAuthGuard] Token não encontrado`, undefined, 'JwtAuthGuard');
       throw new UnauthorizedException('Token não fornecido');
     }
-
-    console.log(`🔑 [JwtAuthGuard] Token encontrado: ${token.substring(0, 20)}...`);
-
+    this.logger.debug(`[JwtAuthGuard] Token encontrado: ${token.substring(0, 20)}...`, 'JwtAuthGuard');
     try {
-      const payload = this.jwtService.verify(token) as UserPayload;
-      console.log(`✅ [JwtAuthGuard] Token válido, payload:`, JSON.stringify(payload, null, 2));
+      const decoded = this.jwtService.decode(token);
+      this.logger.debug(`[JwtAuthGuard] Token decodificado (sem verificar): ${JSON.stringify(decoded, null, 2)}`, 'JwtAuthGuard');
+      const payload = this.jwtService.verify(token, { secret: this.jwtSecret }) as UserPayload;
+      this.logger.debug(`[JwtAuthGuard] Token válido, payload: ${JSON.stringify(payload, null, 2)}`, 'JwtAuthGuard');
       request.user = payload;
       return true;
     } catch (error) {
-      console.log(`❌ [JwtAuthGuard] Erro ao verificar token:`, error.message);
+      this.logger.error(`[JwtAuthGuard] Erro ao verificar token: ${error.message}`, error.stack, 'JwtAuthGuard');
       throw new UnauthorizedException('Token inválido ou expirado');
     }
   }
 
   private async extractTokenFromRequest(request: any): Promise<string | undefined> {
-    console.log(`🔍 [JwtAuthGuard] Extraindo token da requisição...`);
-    
-    // Primeiro tenta extrair do header Authorization
+    this.logger.debug(`[JwtAuthGuard] Extraindo token da requisição...`, 'JwtAuthGuard');
     const authHeader = this.extractTokenFromHeader(request);
     if (authHeader) {
-      console.log(`🔑 [JwtAuthGuard] Token encontrado no header Authorization`);
+      this.logger.debug(`[JwtAuthGuard] Token encontrado no header Authorization`, 'JwtAuthGuard');
       return authHeader;
     }
-
-    // Se não encontrar no header, tenta extrair do cookie
     const cookieToken = await this.extractTokenFromCookie(request);
     if (cookieToken) {
-      console.log(`🍪 [JwtAuthGuard] Token encontrado no cookie`);
+      this.logger.debug(`[JwtAuthGuard] Token encontrado no cookie`, 'JwtAuthGuard');
       return cookieToken;
     }
-
-    console.log(`❌ [JwtAuthGuard] Nenhum token encontrado`);
+    this.logger.debug(`[JwtAuthGuard] Nenhum token encontrado`, 'JwtAuthGuard');
     return undefined;
   }
 
   private extractTokenFromHeader(request: any): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    console.log(`🔍 [JwtAuthGuard] Header Authorization: ${type} ${token ? token.substring(0, 20) + '...' : 'undefined'}`);
+    this.logger.debug(`[JwtAuthGuard] Header Authorization: ${type} ${token ? token.substring(0, 20) + '...' : 'undefined'}`, 'JwtAuthGuard');
     return type === 'Bearer' ? token : undefined;
   }
 
   private async extractTokenFromCookie(request: any): Promise<string | undefined> {
-    console.log(`🔍 [JwtAuthGuard] Verificando cookies...`);
-    console.log(`🍪 [JwtAuthGuard] request.cookies:`, request.cookies);
-    console.log(`🍪 [JwtAuthGuard] request.headers.cookie:`, request.headers.cookie);
-    
-    // Verifica se existe cookie 'auth'
+    this.logger.debug(`[JwtAuthGuard] Verificando cookies...`, 'JwtAuthGuard');
+    this.logger.debug(`[JwtAuthGuard] request.cookies: ${JSON.stringify(request.cookies)}`, 'JwtAuthGuard');
+    this.logger.debug(`[JwtAuthGuard] request.headers.cookie: ${request.headers.cookie}`, 'JwtAuthGuard');
     const authCookie = request.cookies?.auth;
     if (authCookie) {
-      console.log(`🍪 [JwtAuthGuard] Cookie 'auth' encontrado: ${authCookie.substring(0, 20)}...`);
-      
-      // Verifica se é um cookie do iron-session
+      this.logger.debug(`[JwtAuthGuard] Cookie 'auth' encontrado: ${authCookie.substring(0, 20)}...`, 'JwtAuthGuard');
       if (this.ironSessionService.isIronSessionCookie(authCookie)) {
-        console.log(`🔓 [JwtAuthGuard] Cookie é do iron-session, descriptografando...`);
-        // Descriptografa o cookie do iron-session
+        this.logger.debug(`[JwtAuthGuard] Cookie é do iron-session, descriptografando...`, 'JwtAuthGuard');
         const decryptedToken = await this.ironSessionService.decryptCookie(authCookie);
-        console.log(`🔓 [JwtAuthGuard] Token descriptografado: ${decryptedToken ? decryptedToken.substring(0, 20) + '...' : 'null'}`);
+        this.logger.debug(`[JwtAuthGuard] Token descriptografado: ${decryptedToken ? decryptedToken.substring(0, 20) + '...' : 'null'}`, 'JwtAuthGuard');
         return decryptedToken || undefined;
       }
-      // Se não for iron-session, retorna o valor direto (compatibilidade)
-      console.log(`🍪 [JwtAuthGuard] Cookie não é iron-session, usando valor direto`);
+      this.logger.debug(`[JwtAuthGuard] Cookie não é iron-session, usando valor direto`, 'JwtAuthGuard');
       return authCookie;
     }
-
-    // Se não encontrar cookie 'auth', tenta extrair de outros cookies
     const allCookies = request.headers.cookie;
     if (allCookies) {
-      console.log(`🔍 [JwtAuthGuard] Parsing cookies do header...`);
+      this.logger.debug(`[JwtAuthGuard] Parsing cookies do header...`, 'JwtAuthGuard');
       const cookies = allCookies.split(';').reduce((acc, cookie) => {
         const [key, value] = cookie.trim().split('=');
         acc[key] = value;
         return acc;
       }, {});
-      
-      console.log(`🍪 [JwtAuthGuard] Cookies parseados:`, cookies);
-      
-      // Tenta encontrar token em diferentes formatos de cookie
+      this.logger.debug(`[JwtAuthGuard] Cookies parseados: ${JSON.stringify(cookies)}`, 'JwtAuthGuard');
       const cookieValue = cookies.auth || cookies.token || cookies.jwt;
       if (cookieValue) {
-        console.log(`🍪 [JwtAuthGuard] Cookie encontrado: ${cookieValue.substring(0, 20)}...`);
-        
-        // Verifica se é um cookie do iron-session
+        this.logger.debug(`[JwtAuthGuard] Cookie encontrado: ${cookieValue.substring(0, 20)}...`, 'JwtAuthGuard');
         if (this.ironSessionService.isIronSessionCookie(cookieValue)) {
-          console.log(`🔓 [JwtAuthGuard] Cookie é do iron-session, descriptografando...`);
-          // Descriptografa o cookie do iron-session
+          this.logger.debug(`[JwtAuthGuard] Cookie é do iron-session, descriptografando...`, 'JwtAuthGuard');
           const decryptedToken = await this.ironSessionService.decryptCookie(cookieValue);
-          console.log(`🔓 [JwtAuthGuard] Token descriptografado: ${decryptedToken ? decryptedToken.substring(0, 20) + '...' : 'null'}`);
+          this.logger.debug(`[JwtAuthGuard] Token descriptografado: ${decryptedToken ? decryptedToken.substring(0, 20) + '...' : 'null'}`, 'JwtAuthGuard');
           return decryptedToken || undefined;
         }
-        // Se não for iron-session, retorna o valor direto
-        console.log(`🍪 [JwtAuthGuard] Cookie não é iron-session, usando valor direto`);
+        this.logger.debug(`[JwtAuthGuard] Cookie não é iron-session, usando valor direto`, 'JwtAuthGuard');
         return cookieValue;
       }
     }
-
-    console.log(`❌ [JwtAuthGuard] Nenhum cookie de autenticação encontrado`);
+    this.logger.debug(`[JwtAuthGuard] Nenhum cookie de autenticação encontrado`, 'JwtAuthGuard');
     return undefined;
   }
 }

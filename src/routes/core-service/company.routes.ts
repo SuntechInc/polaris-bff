@@ -11,6 +11,7 @@ import {
   // Res, // Removido
   HttpException,
   Put,
+  Logger,
 } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
@@ -25,11 +26,14 @@ import { AdminGuard } from '../../guards/admin.guard';
 export class CompanyController {
   private readonly coreServiceUrl: string;
 
+  private readonly logger = new Logger(CompanyController.name);
+
   constructor(
     private httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
     this.coreServiceUrl = this.configService.get<string>('CORE_SERVICE_URL');
+    this.logger.log(`Core Service URL configurada: ${this.coreServiceUrl}`, 'CompanyController');
   }
 
   @ApiOperation({ summary: 'Get all companies - Apenas GLOBAL_ADMIN' })
@@ -68,7 +72,7 @@ export class CompanyController {
       return coreResponse.data;
     } catch (error: any) {
       const status = error.response?.status || HttpStatus.BAD_REQUEST;
-      const message = error.response?.data?.message || 'Erro ao buscar empresa';
+      const message = error.response?.data?.message || 'Error searching company';
       throw new HttpException({ message }, status);
     }
   }
@@ -85,7 +89,7 @@ export class CompanyController {
       return coreResponse.data;
     } catch (error: any) {
       const status = error.response?.status || HttpStatus.BAD_REQUEST;
-      const message = error.response?.data?.message || 'Erro ao buscar empresa por nome';
+      const message = error.response?.data?.message || 'Error searching company by name';
       throw new HttpException({ message }, status);
     }
   }
@@ -115,10 +119,36 @@ export class CompanyController {
   @UseGuards(AdminGuard)
   @HttpCode(HttpStatus.CREATED)
   async createCompany(@Body() dto: CreateCompanyGatewayDto) {
-    const response = await firstValueFrom(
-      this.httpService.post(`${this.coreServiceUrl}/companies`, dto),
-    );
-    return response.data;
+    this.logger.log(`Tentando criar empresa: ${JSON.stringify(dto)}`, 'CompanyController');
+    
+    try {
+      this.logger.log(`Enviando requisição para: ${this.coreServiceUrl}/companies`, 'CompanyController');
+      
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.coreServiceUrl}/companies`, dto),
+      );
+      
+      this.logger.log(`Empresa criada com sucesso: ${JSON.stringify(response.data)}`, 'CompanyController');
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(
+        `Erro ao criar empresa: ${error.message}`, 
+        error.stack, 
+        'CompanyController'
+      );
+      
+      if (error.response) {
+        this.logger.error(
+          `Resposta do core service: ${JSON.stringify(error.response.data)}`, 
+          undefined, 
+          'CompanyController'
+        );
+      }
+      
+      const status = error.response?.status || HttpStatus.BAD_REQUEST;
+      const message = error.response?.data?.message || 'Error creating company';
+      throw new HttpException({ message }, status);
+    }
   }
 
   @ApiOperation({ summary: 'Atualizar empresa - Apenas GLOBAL_ADMIN' })
@@ -155,7 +185,7 @@ export class CompanyController {
       return coreResponse.data;
     } catch (error: any) {
       const status = error.response?.status || HttpStatus.BAD_REQUEST;
-      const message = error.response?.data?.message || 'Erro ao atualizar empresa';
+      const message = error.response?.data?.message || 'Error updating company';
       throw new HttpException({ message }, status);
     }
   }

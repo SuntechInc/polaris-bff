@@ -5,10 +5,12 @@ import {
 } from '@nestjs/platform-fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyCookie from '@fastify/cookie';
+import { ValidationPipe } from '@nestjs/common';
 import { GatewayModule } from './gateway.module';
 import { setupSwagger } from './config/swagger.config';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { CustomLogger } from './custom.logger';
+import { ValidationInterceptor } from './interceptors/validation.interceptor';
 
 async function bootstrap() {
   
@@ -20,6 +22,21 @@ async function bootstrap() {
 
   const jwtGuard = app.get(JwtAuthGuard);
   app.useGlobalGuards(jwtGuard);
+
+  // Configurar ValidationPipe globalmente
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
+
+  // Configurar interceptor de validação
+  app.useGlobalInterceptors(new ValidationInterceptor());
 
   setupSwagger(app);  
 

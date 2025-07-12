@@ -7,7 +7,6 @@ import { CredentialDto } from "./dto/credential.dto";
 import { AdminGuard } from "../../guards/admin.guard";
 import { CurrentUser } from "../../decorators/user.decorator";
 import { UserPayload } from "../../interfaces/user.interface";
-import { IronSessionService } from "../../services/iron-session.service";
 
 @ApiTags('Auth')
 @Controller('auth')

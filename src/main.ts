@@ -4,7 +4,6 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import fastifyCors from '@fastify/cors';
-import fastifyCookie from '@fastify/cookie';
 import { ValidationPipe } from '@nestjs/common';
 import { GatewayModule } from './gateway.module';
 import { setupSwagger } from './config/swagger.config';
@@ -43,12 +42,6 @@ async function bootstrap() {
   await app.register(fastifyCors, {
     origin: true,                    // qualquer domínio pode chamar
     credentials: true,            // todos os headers são permitidos
-  });
-
-
-
-  await app.register(fastifyCookie, {
-    secret: process.env.IRON_SESSION_SECRET || '12345678901234567890123456789012',
   });
 
   const PORT = process.env.PORT || 3000;

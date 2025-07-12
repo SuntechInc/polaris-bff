@@ -1,7 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserPayload } from '../interfaces/user.interface';
-import { IronSessionService } from '../services/iron-session.service';
 import { ConfigService } from '@nestjs/config';
 import { CustomLogger } from '../custom.logger';
 
@@ -11,7 +10,6 @@ export class JwtAuthGuard implements CanActivate {
 
   constructor(
     private jwtService: JwtService,
-    private ironSessionService: IronSessionService,
     private configService: ConfigService,
     private readonly logger: CustomLogger,
   ) {
@@ -24,7 +22,6 @@ export class JwtAuthGuard implements CanActivate {
     const publicRoutes = [
       '/healthz',
       '/auth/login',
-      '/auth/test-iron-session',
       '/docs',
       'api-docs',
     ];
@@ -33,7 +30,7 @@ export class JwtAuthGuard implements CanActivate {
     if (publicRoutes.some(route => currentRoute.includes(route))) {
       return true;
     }
-    const token = await this.extractTokenFromRequest(request);
+    const token = this.extractTokenFromHeader(request);
     if (!token) {
       this.logger.error(`[JwtAuthGuard] Token não encontrado`, undefined, 'JwtAuthGuard');
       throw new UnauthorizedException('Token não fornecido');
@@ -49,51 +46,8 @@ export class JwtAuthGuard implements CanActivate {
     }
   }
 
-  private async extractTokenFromRequest(request: any): Promise<string | undefined> {
-    const authHeader = this.extractTokenFromHeader(request);
-    if (authHeader) {
-      return authHeader;
-    }
-    const cookieToken = await this.extractTokenFromCookie(request);
-    if (cookieToken) {
-      return cookieToken;
-    }
-    return undefined;
-  }
-
   private extractTokenFromHeader(request: any): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
-  }
-
-  private async extractTokenFromCookie(request: any): Promise<string | undefined> {
-
-    const authCookie = request.cookies?.auth;
-    if (authCookie) {
-
-      if (this.ironSessionService.isIronSessionCookie(authCookie)) {
-    
-        const decryptedToken = await this.ironSessionService.decryptCookie(authCookie);
-        return decryptedToken || undefined;
-      }
-      return authCookie;
-    }
-    const allCookies = request.headers.cookie;
-    if (allCookies) {
-      const cookies = allCookies.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        acc[key] = value;
-        return acc;
-      }, {});
-      const cookieValue = cookies.auth || cookies.token || cookies.jwt;
-      if (cookieValue) {
-        if (this.ironSessionService.isIronSessionCookie(cookieValue)) {
-          const decryptedToken = await this.ironSessionService.decryptCookie(cookieValue);
-          return decryptedToken || undefined;
-        }
-        return cookieValue;
-      }
-    }
-    return undefined;
   }
 }

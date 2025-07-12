@@ -34,28 +34,6 @@ export class CompanyController {
     this.logger.log(`Core Service URL configurada: ${this.coreServiceUrl}`, 'CompanyController');
   }
 
-  @ApiOperation({ summary: 'Get all companies - Apenas GLOBAL_ADMIN' })
-  @UseGuards(AdminGuard)
-  @HttpCode(HttpStatus.OK)
-  @Get('companies')
-  async getCompanies(
-    @Query('page') page?: number,
-    @Query('size') size?: number,
-    @Query('take') take?: number,
-    @Query('skip') skip?: number,
-  ) {
-    const params: any = {};
-    if (page !== undefined) params.page = page;
-    if (size !== undefined) params.size = size;
-    if (take !== undefined) params.take = take;
-    if (skip !== undefined) params.skip = skip;
-
-    const response = await firstValueFrom(
-      this.httpService.get(`${this.coreServiceUrl}/companies`, { params }),
-    );
-    return response.data;
-  }
-
   @ApiOperation({ 
     summary: 'Filter companies with dynamic filters - GLOBAL_ADMIN only',
     description: `
@@ -187,42 +165,6 @@ axios.get('/companies/filter', {
     } catch (error: any) {
       const status  = error.response?.status  ?? HttpStatus.BAD_REQUEST;
       const message = error.response?.data?.message ?? 'Erro ao filtrar empresas';
-      throw new HttpException({ message }, status);
-    }
-  }
-
-  @ApiOperation({ summary: 'Buscar empresa por TaxId - Apenas GLOBAL_ADMIN' })
-  @ApiParam({ name: 'taxId', type: String, example: '0000000000000', description: 'CNPJ ou identificador da empresa' })
-  @UseGuards(AdminGuard)
-  @Get('companies/search/:taxId')
-  async findByTaxId(@Param('taxId') taxId: string) {
-   
-    const cleanTaxId = taxId.replace(/\D/g, '');
-    try {
-      const coreResponse = await firstValueFrom(
-        this.httpService.get(`${this.coreServiceUrl}/companies/search/${cleanTaxId}`)
-      );
-      return coreResponse.data;
-    } catch (error: any) {
-      const status = error.response?.status || HttpStatus.BAD_REQUEST;
-      const message = error.response?.data?.message || 'Error searching company';
-      throw new HttpException({ message }, status);
-    }
-  }
-
-  @ApiOperation({ summary: 'Buscar empresa por nome - Apenas GLOBAL_ADMIN' })
-  @ApiParam({ name: 'name', type: String, example: 'quali', description: 'Nome (ou parte do nome) da empresa' })
-  @UseGuards(AdminGuard)
-  @Get('companies/search/name/:name')
-  async findByName(@Param('name') name: string) {
-    try {
-      const coreResponse = await firstValueFrom(
-        this.httpService.get(`${this.coreServiceUrl}/companies/search/name/${encodeURIComponent(name)}`)
-      );
-      return coreResponse.data;
-    } catch (error: any) {
-      const status = error.response?.status || HttpStatus.BAD_REQUEST;
-      const message = error.response?.data?.message || 'Error searching company by name';
       throw new HttpException({ message }, status);
     }
   }

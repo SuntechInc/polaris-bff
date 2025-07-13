@@ -3,8 +3,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export function setupSwagger(app: INestApplication) {
   const config = new DocumentBuilder()
-    .setTitle('Polaris API Gateway')
-    .setDescription('The Polaris API Gateway API description')
+    .setTitle('Qualityflow API Documentation')
+    .setDescription('Qualityflow public API Documentation')
     .setVersion('1.0')
     .build();
 

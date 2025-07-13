@@ -8,6 +8,7 @@ import {
   Post,
   Body,
   Put,
+  Delete,
 } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
@@ -201,5 +202,32 @@ GET /departments/filter?page=1&size=10&name=eq:Finance
       this.httpService.put(`${this.coreServiceUrl}/departments/${id}`, dto),
     );
     return response.data;
+  }
+
+  @ApiOperation({ summary: 'Soft delete a department (set status to INACTIVE)' })
+  @ApiParam({ name: 'id', type: String, example: 'clx1234567890abcdef', description: 'Department ID' })
+  @ApiOkResponse({
+    description: 'Department set to INACTIVE successfully',
+    schema: {
+      example: {
+        message: 'Department set to INACTIVE successfully',
+        id: 'clx1234567890abcdef',
+        status: 'INACTIVE'
+      }
+    }
+  })
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteDepartment(@Param('id') id: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.delete(`${this.coreServiceUrl}/departments/${id}`),
+      );
+      return response.data;
+    } catch (error: any) {
+      const status = error.response?.status ?? HttpStatus.BAD_REQUEST;
+      const message = error.response?.data?.message ?? 'Error deleting department';
+      throw new Error(message);
+    }
   }
 }

@@ -9,6 +9,7 @@ import {
   Body,
   Put,
   Delete,
+  HttpException,
 } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
@@ -44,16 +45,18 @@ Supported operators:
 - eq: (equals) Example: status=eq:ACTIVE
 - in: (in list) Example: status=in:ACTIVE,INACTIVE
 
+companyId is required in all queries.
+
 Examples:
 
 Simple filter (AND):
-GET /departments/filter?status=eq:ACTIVE&name=eq:Finance
+GET /departments/filter?companyId=clx1234567890abcdef&status=eq:ACTIVE&name=eq:Finance
 
 Combined filter (AND + OR):
-GET /departments/filter?status=eq:ACTIVE&or.name=eq:Finance&or.code=eq:FIN
+GET /departments/filter?companyId=clx1234567890abcdef&status=eq:ACTIVE&or.name=eq:Finance&or.code=eq:FIN
 
 With pagination:
-GET /departments/filter?page=1&size=10&name=eq:Finance
+GET /departments/filter?companyId=clx1234567890abcdef&page=1&size=10&name=eq:Finance
     `
   })
   @ApiOkResponse({
@@ -95,6 +98,13 @@ GET /departments/filter?page=1&size=10&name=eq:Finance
     }
   })
   @ApiQuery({
+    name: 'companyId',
+    required: true,
+    type: String,
+    description: 'Company ID (required)',
+    example: 'clx1234567890abcdef'
+  })
+  @ApiQuery({
     name: 'page',
     required: false,
     type: Number,
@@ -131,6 +141,9 @@ GET /departments/filter?page=1&size=10&name=eq:Finance
   @HttpCode(HttpStatus.OK)
   @Get('filter')
   async filterDepartments(@Query() query: Record<string, any>) {
+    if (!query.companyId) {
+      throw new HttpException({ message: 'companyId is required to filter departments' }, HttpStatus.BAD_REQUEST);
+    }
     try {
       const response = await firstValueFrom(
         this.httpService.get(

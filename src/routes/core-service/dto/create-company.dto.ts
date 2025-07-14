@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEmail, IsOptional, IsEnum, IsBoolean, IsNotEmpty, Length, Matches, IsUUID } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsEnum, IsBoolean, IsNotEmpty, Length, Matches } from 'class-validator';
 import { Industry, Segment } from './enums'; 
 
 export class CreateCompanyGatewayDto {
@@ -72,7 +72,7 @@ export class CreateCompanyGatewayDto {
     required: false 
   })
   @IsOptional()
-  @IsUUID('4', { message: 'Address ID must be a valid UUID' })
+  @IsString({ message: 'Address ID must be a string' })
   addressId?: string;
 
   @ApiProperty({ 

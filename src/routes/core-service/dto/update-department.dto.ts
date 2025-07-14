@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { DepartmentStatus } from './create-department.dto';
 
@@ -36,7 +36,7 @@ export class UpdateDepartmentGatewayDto {
   status?: DepartmentStatus;
 
   @ApiProperty({ description: 'Branch ID', required: false, example: 'clx1234567890abcdef' })
-  @IsUUID()
+  @IsString({ message: 'the branchId must be a string' })
   @IsOptional()
   branchId?: string;
 } 

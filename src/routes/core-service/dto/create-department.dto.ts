@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum DepartmentStatus {
@@ -40,7 +40,7 @@ export class CreateDepartmentGatewayDto {
   status: string;
 
   @ApiProperty({ description: 'Branch ID', example: '00000000-0000-0000-0000-000000000000' })
-  @IsUUID()
+  @IsString({ message: 'the branchId must be a string' })
   @IsNotEmpty({ message: 'the branchId is required' })
   branchId: string;
 } 

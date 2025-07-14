@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsUUID, MinLength, Matches } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MinLength, Matches } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { BranchStatus } from './create-branch.dto';
@@ -107,7 +107,7 @@ export class UpdateBranchGatewayDto {
     example: '00000000-0000-0000-0000-000000000000',
     required: false
   })
-  @IsUUID()
+  @IsString({ message: 'Address ID must be a string' })
   @IsOptional()
   addressId?: string;
 } 

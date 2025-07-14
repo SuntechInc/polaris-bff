@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsUUID, MinLength, Matches, IsNotEmpty } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MinLength, Matches, IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -106,15 +106,15 @@ export class CreateBranchGatewayDto {
     description: 'Company ID',
     example: '00000000-0000-0000-0000-000000000000'
   })
-  @IsUUID()
+  @IsString({ message: 'Company ID must be a string' })
   companyId: string;
 
   @ApiProperty({
     description: 'Address ID',
-    example: '00000000-0000-0000-0000-000000000000',
+    example: '248bdgawr',
     required: false
   })
-  @IsUUID()
+  @IsString({ message: 'Address ID must be a string' })
   @IsOptional()
   addressId?: string;
 } 

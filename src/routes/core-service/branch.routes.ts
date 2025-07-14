@@ -76,7 +76,8 @@ axios.get('/branches/filter', {
           {
             id: "00000000000000000000000000000000",
             taxId: "12345678000199",
-            name: "Center Branch",
+            tradingName: "Branch XPTO",
+            legalName: "Branch XPTO LTDA",
             code: "BR001",
             email: "contact@branch.com",
             phone: "+55 11 99999-9999",
@@ -98,14 +99,14 @@ axios.get('/branches/filter', {
           hasPrevious: false
         },
         filter: {
-          applied: '{"$and":[{"companyId":{"$eq":"123"}},{"status":{"$eq":"ACTIVE"}},{"$or":[{"name":{"$eq":"Center"}},{"code":{"$eq":"BR001"}}]}]}',
+          applied: '{"$and":[{"companyId":{"$eq":"123"}},{"status":{"$eq":"ACTIVE"}},{"$or":[{"tradingName":{"$eq":"Branch XPTO"}},{"legalName":{"$eq":"Branch XPTO LTDA"}}]}]}',
           parsed: {
             $and: [
               { companyId: { $eq: "123" } },
               { status: { $eq: "ACTIVE" } },
               { $or: [
-                { name: { $eq: "Center" } },
-                { code: { $eq: "BR001" } }
+                { tradingName: { $eq: "Branch XPTO" } },
+                { legalName: { $eq: "Branch XPTO LTDA" } }
               ]}
             ]
           }

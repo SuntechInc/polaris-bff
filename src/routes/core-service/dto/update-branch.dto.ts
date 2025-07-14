@@ -5,7 +5,7 @@ import { BranchStatus } from './create-branch.dto';
 
 export class UpdateBranchGatewayDto {
   @ApiProperty({
-    description: 'CNPJ da filial (apenas números)',
+    description: 'Branch tax ID (numbers only)',
     example: '12345678000199',
     minLength: 11,
     required: false
@@ -17,20 +17,32 @@ export class UpdateBranchGatewayDto {
   taxId?: string;
 
   @ApiProperty({
-    description: 'Nome da filial',
-    example: 'Filial Centro Atualizada',
+    description: 'Trading name of the branch',
+    example: 'Branch XPTO',
     minLength: 3,
     required: false
   })
   @IsString()
-  @MinLength(3, { message: 'Branch name must be at least 3 characters long' })
+  @MinLength(3, { message: 'Trading name must be at least 3 characters long' })
   @IsOptional()
   @Transform(({ value }) => value?.trim())
-  name?: string;
+  tradingName?: string;
 
   @ApiProperty({
-    description: 'Código da filial',
-    example: 'FIL001',
+    description: 'Legal name of the branch',
+    example: 'Branch XPTO LTDA',
+    minLength: 3,
+    required: false
+  })
+  @IsString()
+  @MinLength(3, { message: 'Legal name must be at least 3 characters long' })
+  @IsOptional()
+  @Transform(({ value }) => value?.trim())
+  legalName?: string;
+
+  @ApiProperty({
+    description: 'Branch code',
+    example: 'BR001',
     required: false
   })
   @IsString()
@@ -39,8 +51,8 @@ export class UpdateBranchGatewayDto {
   code?: string;
 
   @ApiProperty({
-    description: 'Email da filial',
-    example: 'novoemail@filial.com.br',
+    description: 'Branch email',
+    example: 'newemail@branch.com',
     required: false
   })
   @IsEmail()
@@ -49,7 +61,7 @@ export class UpdateBranchGatewayDto {
   email?: string;
 
   @ApiProperty({
-    description: 'Telefone da filial',
+    description: 'Branch phone number',
     example: '+55 11 98888-8888',
     required: false,
     minLength: 10
@@ -62,7 +74,7 @@ export class UpdateBranchGatewayDto {
   phone?: string;
 
   @ApiProperty({
-    description: 'Responsável pela filial',
+    description: 'Branch responsible',
     example: 'Maria Santos',
     required: false
   })
@@ -72,7 +84,7 @@ export class UpdateBranchGatewayDto {
   responsible?: string;
 
   @ApiProperty({
-    description: 'Se é a sede da empresa',
+    description: 'Is headquarter',
     example: false,
     required: false
   })
@@ -81,7 +93,7 @@ export class UpdateBranchGatewayDto {
   isHeadquarter?: boolean;
 
   @ApiProperty({
-    description: 'Status da filial',
+    description: 'Branch status',
     enum: BranchStatus,
     example: BranchStatus.ACTIVE,
     required: false
@@ -91,7 +103,7 @@ export class UpdateBranchGatewayDto {
   status?: BranchStatus;
 
   @ApiProperty({
-    description: 'ID do endereço',
+    description: 'Address ID',
     example: '00000000-0000-0000-0000-000000000000',
     required: false
   })

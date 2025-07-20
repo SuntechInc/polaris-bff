@@ -264,4 +264,176 @@ axios.get('/companies/filter', {
       throw new HttpException({ message }, status);
     }
   }
+
+  @ApiOperation({ summary: 'List available modules - GLOBAL_ADMIN only' })
+  @ApiOkResponse({
+    description: 'List of available modules',
+    schema: {
+      example: [
+        {
+          id: "00000000000000000000000000000000",
+          name: "Financial Module",
+          description: "Module for financial management",
+          isActive: true,
+          createdAt: "2025-06-23T23:32:29.601Z",
+          updatedAt: "2025-06-23T23:32:29.601Z"
+        }
+      ]
+    }
+  })
+  @UseGuards(AdminGuard)
+  @HttpCode(HttpStatus.OK)
+  @Get('companies/modules')
+  async listModules() {
+    this.logger.log('Listing available modules...', 'CompanyController');
+    
+    try {
+      this.logger.log(`Sending request to: ${this.coreServiceUrl}/companies/modules`, 'CompanyController');
+      
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.coreServiceUrl}/companies/modules`)
+      );
+      
+      this.logger.log(`Modules listed successfully: ${JSON.stringify(response.data)}`, 'CompanyController');
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(
+        `Error listing modules: ${error.message}`, 
+        error.stack, 
+        'CompanyController'
+      );
+      
+      if (error.response) {
+        this.logger.error(
+          `Core service response: ${JSON.stringify(error.response.data)}`, 
+          undefined, 
+          'CompanyController'
+        );
+      }
+      
+      const status = error.response?.status || HttpStatus.BAD_REQUEST;
+      const message = error.response?.data?.message || 'Error listing modules';
+      throw new HttpException({ message }, status);
+    }
+  }
+
+  @ApiOperation({ summary: 'List company modules - GLOBAL_ADMIN only' })
+  @ApiParam({ name: 'companyId', type: String, example: '123', description: 'Company ID' })
+  @ApiOkResponse({
+    description: 'List of company modules',
+    schema: {
+      example: [
+        {
+          id: "00000000000000000000000000000000",
+          moduleId: "00000000000000000000000000000001",
+          moduleName: "Financial Module",
+          moduleDescription: "Module for financial management",
+          isActive: true,
+          enabledAt: "2025-06-23T23:32:29.601Z",
+          createdAt: "2025-06-23T23:32:29.601Z",
+          updatedAt: "2025-06-23T23:32:29.601Z"
+        }
+      ]
+    }
+  })
+  @UseGuards(AdminGuard)
+  @HttpCode(HttpStatus.OK)
+  @Get('companies/:companyId/modules')
+  async listCompanyModules(@Param('companyId') companyId: string) {
+    this.logger.log(`Listing modules for company: ${companyId}`, 'CompanyController');
+    
+    try {
+      this.logger.log(`Sending request to: ${this.coreServiceUrl}/companies/${companyId}/modules`, 'CompanyController');
+      
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.coreServiceUrl}/companies/${companyId}/modules`)
+      );
+      
+      this.logger.log(`Company modules listed successfully: ${JSON.stringify(response.data)}`, 'CompanyController');
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(
+        `Error listing company modules: ${error.message}`, 
+        error.stack, 
+        'CompanyController'
+      );
+      
+      if (error.response) {
+        this.logger.error(
+          `Core service response: ${JSON.stringify(error.response.data)}`, 
+          undefined, 
+          'CompanyController'
+        );
+      }
+      
+      const status = error.response?.status || HttpStatus.BAD_REQUEST;
+      const message = error.response?.data?.message || 'Error listing company modules';
+      throw new HttpException({ message }, status);
+    }
+  }
+
+  @ApiOperation({ summary: 'Enable module for company - GLOBAL_ADMIN only' })
+  @ApiParam({ name: 'companyId', type: String, example: '123', description: 'Company ID' })
+  @ApiBody({
+    description: 'Module to enable',
+    schema: {
+      example: {
+        moduleId: "00000000000000000000000000000001"
+      }
+    }
+  })
+  @ApiOkResponse({
+    description: 'Module enabled successfully',
+    schema: {
+      example: {
+        id: "00000000000000000000000000000000",
+        moduleId: "00000000000000000000000000000001",
+        moduleName: "Financial Module",
+        moduleDescription: "Module for financial management",
+        isActive: true,
+        enabledAt: "2025-06-23T23:32:29.601Z",
+        createdAt: "2025-06-23T23:32:29.601Z",
+        updatedAt: "2025-06-23T23:32:29.601Z"
+      }
+    }
+  })
+  @UseGuards(AdminGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('companies/:companyId/modules')
+  async enableModule(
+    @Param('companyId') companyId: string,
+    @Body() body: { moduleId: string }
+  ) {
+    this.logger.log(`Enabling module for company: ${companyId}`, 'CompanyController');
+    this.logger.log(`Request body: ${JSON.stringify(body)}`, 'CompanyController');
+    
+    try {
+      this.logger.log(`Sending request to: ${this.coreServiceUrl}/companies/${companyId}/modules`, 'CompanyController');
+      
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.coreServiceUrl}/companies/${companyId}/modules`, body)
+      );
+      
+      this.logger.log(`Module enabled successfully: ${JSON.stringify(response.data)}`, 'CompanyController');
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(
+        `Error enabling module: ${error.message}`, 
+        error.stack, 
+        'CompanyController'
+      );
+      
+      if (error.response) {
+        this.logger.error(
+          `Core service response: ${JSON.stringify(error.response.data)}`, 
+          undefined, 
+          'CompanyController'
+        );
+      }
+      
+      const status = error.response?.status || HttpStatus.BAD_REQUEST;
+      const message = error.response?.data?.message || 'Error enabling module';
+      throw new HttpException({ message }, status);
+    }
+  }
 }

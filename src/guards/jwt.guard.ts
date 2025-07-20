@@ -23,9 +23,7 @@ export class JwtAuthGuard implements CanActivate {
     // Skip authentication if SKIP_AUTH is enabled
     const skipAuth = this.configService.get<string>('SKIP_AUTH');
     if (skipAuth === 'true') {
-      this.logger.log('[JwtAuthGuard] SKIP_AUTH enabled - bypassing authentication', 'JwtAuthGuard');
       
-      // Set a mock user for development
       request.user = {
         sub: 'dev-user-id',
         email: 'dev@example.com',

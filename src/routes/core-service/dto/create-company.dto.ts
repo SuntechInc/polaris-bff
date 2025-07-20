@@ -1,35 +1,47 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEmail, IsOptional, IsEnum, IsBoolean, IsNotEmpty, Length, Matches } from 'class-validator';
-import { Industry, Segment } from './enums'; 
+import { IsEmail, IsEnum, IsOptional, IsString, MinLength, Matches, IsNotEmpty } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { Industry, Segment, CompanyStatus } from './enums'; 
 
 export class CreateCompanyGatewayDto {
   @ApiProperty({ example: 'Empresa XPTO', description: 'Trading name of the company' })
-  @IsString({ message: 'Trading name must be a string' })
-  @IsNotEmpty({ message: 'Trading name is required' })
-  @Length(2, 100, { message: 'Trading name must be between 2 and 100 characters' })
+  @IsString()
+  @MinLength(3, { message: 'Trading name must be at least 3 characters long' })
+  @Transform(({ value }) => value?.trim())
   tradingName: string;
 
   @ApiProperty({ example: 'Empresa XPTO LTDA', description: 'Legal name of the company' })
-  @IsString({ message: 'Legal name must be a string' })
+  @IsString()
+  @MinLength(3, { message: 'Legal name must be at least 3 characters long' })
   @IsNotEmpty({ message: 'Legal name is required' })
-  @Length(2, 200, { message: 'Legal name must be between 2 and 200 characters' })
+  @Transform(({ value }) => value?.trim())
   legalName: string;
 
   @ApiProperty({ example: '12345678000199', description: 'Company tax ID' })
-  @IsString({ message: 'Tax ID must be a string' })
+  @IsString()
+  @MinLength(11, { message: 'Tax ID must be at least 11 characters long' })
   @IsNotEmpty({ message: 'Tax ID is required' })
-  @Matches(/^\d{14}$/, { message: 'Tax ID must contain exactly 14 numeric digits' })
+  @Transform(({ value }) => value?.replace(/[^\d]/g, '')) // Remove caracteres não numéricos
   taxId: string;
 
+  @ApiProperty({ example: 'BR', description: 'Country code for taxId', required: false })
+  @IsString()
+  @IsOptional()
+  @Transform(({ value }) => value?.toUpperCase())
+  taxCountry?: string = 'BR';
+
   @ApiProperty({ example: 'contato@empresa.com', description: 'Company email' })
-  @IsEmail({}, { message: 'Email must be a valid email address' })
+  @IsEmail({}, { message: 'Invalid email format' })
   @IsNotEmpty({ message: 'Email is required' })
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email: string;
 
   @ApiProperty({ example: '+55 11 99999-9999', description: 'Company phone', required: false })
+  @IsString()
+  @MinLength(10, { message: 'Phone number must be at least 10 characters long' })
+  @Matches(/^[0-9+\-() ]+$/, { message: 'Phone number can only contain numbers, +, -, () and spaces' })
   @IsOptional()
-  @IsString({ message: 'Phone must be a string' })
-  @Matches(/^\+?[\d\s\-\(\)]+$/, { message: 'Phone must contain only numbers, spaces, hyphens and parentheses' })
+  @Transform(({ value }) => value?.trim())
   phone?: string;
 
   @ApiProperty({
@@ -37,8 +49,7 @@ export class CreateCompanyGatewayDto {
     example: Industry.HEALTHCORE,
     description: 'Industry of the company',
   })
-  @IsEnum(Industry, { message: 'Industry must be a valid value' })
-  @IsNotEmpty({ message: 'Industry is required' })
+  @IsEnum(Industry, { message: 'Invalid industry' })
   industry: Industry;
 
   @ApiProperty({
@@ -46,33 +57,25 @@ export class CreateCompanyGatewayDto {
     example: Segment.LABORATORY,
     description: 'Segment of the company within the industry',
   })
-  @IsEnum(Segment, { message: 'Segment must be a valid value' })
-  @IsNotEmpty({ message: 'Segment is required' })
+  @IsEnum(Segment, { message: 'Invalid segment' })
   segment: Segment;
 
-  @ApiProperty({ example: 'BR', description: 'Country code for taxId', required: false })
-  @IsOptional()
-  @IsString({ message: 'Tax country must be a string' })
-  @Length(2, 2, { message: 'Tax country must be exactly 2 characters' })
-  taxCountry?: string;
-
   @ApiProperty({ 
-    example: 'ACTIVE', 
+    example: CompanyStatus.ACTIVE, 
     description: 'Company status', 
-    enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED'],
+    enum: CompanyStatus,
     required: false 
   })
-  @IsOptional()
-  @IsEnum(['ACTIVE', 'INACTIVE', 'SUSPENDED'], { message: 'Status must be a valid value' })
-  status?: string;
+  @IsEnum(CompanyStatus, { message: 'Invalid company status' })
+  status: CompanyStatus = CompanyStatus.ACTIVE;
 
   @ApiProperty({ 
     example: '123e4567-e89b-12d3-a456-426614174000', 
     description: 'Address ID', 
     required: false 
   })
-  @IsOptional()
   @IsString({ message: 'Address ID must be a string' })
+  @IsOptional()
   addressId?: string;
 
   @ApiProperty({ 
@@ -81,6 +84,5 @@ export class CreateCompanyGatewayDto {
     required: false 
   })
   @IsOptional()
-  @IsBoolean({ message: 'isBaseCompany must be a boolean value' })
-  isBaseCompany?: boolean;
+  isBaseCompany?: boolean = false;
 }

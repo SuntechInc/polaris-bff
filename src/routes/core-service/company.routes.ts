@@ -169,14 +169,35 @@ axios.get('/companies/filter', {
     }
   }
 
-  @ApiOperation({ summary: 'Create a new company - Apenas GLOBAL_ADMIN' })
-  @UseGuards(AdminGuard)
+  @ApiOperation({ 
+    summary: 'Create a new company - GLOBAL_ADMIN only',
+    description: `
+Creates a new company with automatic data transformation and validation.
 
+**Data Transformations:**
+- Trading name and legal name: automatic trim
+- Tax ID: removes non-numeric characters
+- Email: converts to lowercase and trims
+- Phone: automatic trim
+- Tax country: converts to uppercase (default: BR)
+
+**Validation Rules:**
+- Trading name: minimum 3 characters
+- Legal name: minimum 3 characters, required
+- Tax ID: minimum 11 characters, removes non-digits
+- Email: valid email format, required
+- Phone: minimum 10 characters, optional
+- Industry: must be valid enum value
+- Segment: must be valid enum value
+- Status: defaults to ACTIVE
+- isBaseCompany: defaults to false
+    `
+  })
   @ApiBody({
     type: CreateCompanyGatewayDto,
     examples: {
       example1: {
-        summary: 'Exemplo padrão',
+        summary: 'Basic company creation',
         value: {
           tradingName: 'Empresa XPTO',
           legalName: 'Empresa XPTO LTDA',
@@ -185,7 +206,32 @@ axios.get('/companies/filter', {
           phone: '+55 11 99999-9999',
           industry: 'HEALTHCORE',
           segment: 'LABORATORY',
-          isActive: true,
+          status: 'ACTIVE',
+          isBaseCompany: false
+        },
+      },
+      example2: {
+        summary: 'Company with minimal data',
+        value: {
+          tradingName: 'Minimal Company',
+          legalName: 'Minimal Company LTDA',
+          taxId: '12345678901',
+          email: 'minimal@company.com',
+          industry: 'TECHNOLOGY',
+          segment: 'HOSPITAL'
+        },
+      },
+      example3: {
+        summary: 'Company with tax ID formatting',
+        value: {
+          tradingName: 'Formatted Company',
+          legalName: 'Formatted Company LTDA',
+          taxId: '12.345.678/0001-99', // Will be transformed to: 12345678000199
+          email: 'formatted@company.com',
+          phone: '(11) 99999-9999',
+          industry: 'AGRIBUSINESS',
+          segment: 'ANIMAL_HEALTH',
+          taxCountry: 'br' // Will be transformed to: BR
         },
       },
     },
@@ -195,6 +241,8 @@ axios.get('/companies/filter', {
   @HttpCode(HttpStatus.CREATED)
   async createCompany(@Body() dto: CreateCompanyGatewayDto) {
     this.logger.log(`Tentando criar empresa: ${JSON.stringify(dto)}`, 'CompanyController');
+    this.logger.log(`DTO type: ${typeof dto}`, 'CompanyController');
+    this.logger.log(`DTO keys: ${Object.keys(dto || {})}`, 'CompanyController');
     
     try {
       this.logger.log(`Enviando requisição para: ${this.coreServiceUrl}/companies`, 'CompanyController');
@@ -226,22 +274,58 @@ axios.get('/companies/filter', {
     }
   }
 
-  @ApiOperation({ summary: 'Atualizar empresa - Apenas GLOBAL_ADMIN' })
-  @ApiParam({ name: 'id', type: String, example: '123', description: 'ID da empresa' })
+  @ApiOperation({ 
+    summary: 'Update company - GLOBAL_ADMIN only',
+    description: `
+Updates an existing company with automatic data transformation and validation.
+
+**Data Transformations:**
+- Trading name and legal name: automatic trim
+- Tax ID: removes non-numeric characters
+- Email: converts to lowercase and trims
+- Phone: automatic trim
+- Tax country: converts to uppercase
+
+**Validation Rules:**
+- Trading name: minimum 3 characters
+- Legal name: minimum 3 characters, required
+- Tax ID: minimum 11 characters, removes non-digits
+- Email: valid email format, required
+- Phone: minimum 10 characters, optional
+- Industry: must be valid enum value
+- Segment: must be valid enum value
+- Status: must be valid enum value
+    `
+  })
+  @ApiParam({ name: 'id', type: String, example: 'cmc1234567890abcdef', description: 'Company ID' })
   @ApiBody({
     type: CreateCompanyGatewayDto,
     examples: {
       example1: {
-        summary: 'Exemplo de atualização',
+        summary: 'Update company information',
         value: {
-          tradingName: 'Empresa Atualizada',
-          legalName: 'Empresa Atualizada LTDA',
+          tradingName: 'Updated Company Name',
+          legalName: 'Updated Company Name LTDA',
           taxId: '12345678000199',
-          email: 'novoemail@empresa.com',
+          email: 'updated@company.com',
           phone: '+55 11 98888-8888',
           industry: 'HEALTHCORE',
           segment: 'LABORATORY',
-          isActive: true,
+          status: 'ACTIVE',
+          isBaseCompany: false
+        },
+      },
+      example2: {
+        summary: 'Partial update with formatting',
+        value: {
+          tradingName: '  New Company Name  ', // Will be trimmed
+          legalName: 'New Company Name LTDA',
+          taxId: '12.345.678/0001-99', // Will be transformed to: 12345678000199
+          email: '  NEW@COMPANY.COM  ', // Will be transformed to: new@company.com
+          phone: '  (11) 99999-9999  ', // Will be trimmed
+          industry: 'TECHNOLOGY',
+          segment: 'HOSPITAL',
+          taxCountry: 'br' // Will be transformed to: BR
         },
       },
     },
@@ -265,7 +349,16 @@ axios.get('/companies/filter', {
     }
   }
 
-  @ApiOperation({ summary: 'List available modules - GLOBAL_ADMIN only' })
+  @ApiOperation({ 
+    summary: 'List available modules - GLOBAL_ADMIN only',
+    description: `
+Retrieves all available modules that can be enabled for companies.
+
+This endpoint returns the list of modules that are available in the system
+and can be assigned to companies. Each module contains basic information
+like name, description, and status.
+    `
+  })
   @ApiOkResponse({
     description: 'List of available modules',
     schema: {
@@ -273,7 +366,15 @@ axios.get('/companies/filter', {
         {
           id: "00000000000000000000000000000000",
           name: "Financial Module",
-          description: "Module for financial management",
+          description: "Module for financial management and accounting",
+          isActive: true,
+          createdAt: "2025-06-23T23:32:29.601Z",
+          updatedAt: "2025-06-23T23:32:29.601Z"
+        },
+        {
+          id: "00000000000000000000000000000001",
+          name: "HR Module",
+          description: "Module for human resources management",
           isActive: true,
           createdAt: "2025-06-23T23:32:29.601Z",
           updatedAt: "2025-06-23T23:32:29.601Z"
@@ -317,8 +418,16 @@ axios.get('/companies/filter', {
     }
   }
 
-  @ApiOperation({ summary: 'List company modules - GLOBAL_ADMIN only' })
-  @ApiParam({ name: 'companyId', type: String, example: '123', description: 'Company ID' })
+  @ApiOperation({ 
+    summary: 'List company modules - GLOBAL_ADMIN only',
+    description: `
+Retrieves all modules that are currently enabled for a specific company.
+
+This endpoint returns the list of modules that have been enabled for the
+specified company, including module details and activation information.
+    `
+  })
+  @ApiParam({ name: 'companyId', type: String, example: 'cmc1234567890abcdef', description: 'Company ID' })
   @ApiOkResponse({
     description: 'List of company modules',
     schema: {
@@ -327,7 +436,17 @@ axios.get('/companies/filter', {
           id: "00000000000000000000000000000000",
           moduleId: "00000000000000000000000000000001",
           moduleName: "Financial Module",
-          moduleDescription: "Module for financial management",
+          moduleDescription: "Module for financial management and accounting",
+          isActive: true,
+          enabledAt: "2025-06-23T23:32:29.601Z",
+          createdAt: "2025-06-23T23:32:29.601Z",
+          updatedAt: "2025-06-23T23:32:29.601Z"
+        },
+        {
+          id: "00000000000000000000000000000002",
+          moduleId: "00000000000000000000000000000003",
+          moduleName: "HR Module",
+          moduleDescription: "Module for human resources management",
           isActive: true,
           enabledAt: "2025-06-23T23:32:29.601Z",
           createdAt: "2025-06-23T23:32:29.601Z",
@@ -372,13 +491,36 @@ axios.get('/companies/filter', {
     }
   }
 
-  @ApiOperation({ summary: 'Enable module for company - GLOBAL_ADMIN only' })
-  @ApiParam({ name: 'companyId', type: String, example: '123', description: 'Company ID' })
+  @ApiOperation({ 
+    summary: 'Enable module for company - GLOBAL_ADMIN only',
+    description: `
+Enables a specific module for a company.
+
+This endpoint activates a module for the specified company, allowing the
+company to use the module's features. The module must be available in
+the system before it can be enabled.
+    `
+  })
+  @ApiParam({ name: 'companyId', type: String, example: 'cmc1234567890abcdef', description: 'Company ID' })
   @ApiBody({
     description: 'Module to enable',
     schema: {
       example: {
         moduleId: "00000000000000000000000000000001"
+      }
+    },
+    examples: {
+      example1: {
+        summary: 'Enable Financial Module',
+        value: {
+          moduleId: "00000000000000000000000000000001"
+        }
+      },
+      example2: {
+        summary: 'Enable HR Module',
+        value: {
+          moduleId: "00000000000000000000000000000002"
+        }
       }
     }
   })
@@ -389,7 +531,7 @@ axios.get('/companies/filter', {
         id: "00000000000000000000000000000000",
         moduleId: "00000000000000000000000000000001",
         moduleName: "Financial Module",
-        moduleDescription: "Module for financial management",
+        moduleDescription: "Module for financial management and accounting",
         isActive: true,
         enabledAt: "2025-06-23T23:32:29.601Z",
         createdAt: "2025-06-23T23:32:29.601Z",

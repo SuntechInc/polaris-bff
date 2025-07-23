@@ -16,6 +16,7 @@ import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { CreateCompanyGatewayDto } from './dto/create-company.dto';
+import { EnableCompanyModuleDto } from './dto/enable-company-module.dto';
 import { ApiBody, ApiOperation, ApiTags, ApiParam, ApiQuery, ApiOkResponse } from '@nestjs/swagger';
 import { AdminGuard } from '../../guards/admin.guard';
 
@@ -499,27 +500,39 @@ Enables a specific module for a company.
 This endpoint activates a module for the specified company, allowing the
 company to use the module's features. The module must be available in
 the system before it can be enabled.
+
+**Required Fields:**
+- moduleCode: The code of the module to enable (e.g., 'FINANCIAL', 'HR')
+- segment: The segment for the module (e.g., 'LABORATORY', 'HOSPITAL')
+
+**Data Transformations:**
+- moduleCode: automatic trim
     `
   })
   @ApiParam({ name: 'companyId', type: String, example: 'cmc1234567890abcdef', description: 'Company ID' })
   @ApiBody({
+    type: EnableCompanyModuleDto,
     description: 'Module to enable',
-    schema: {
-      example: {
-        moduleId: "00000000000000000000000000000001"
-      }
-    },
     examples: {
       example1: {
-        summary: 'Enable Financial Module',
+        summary: 'Enable Financial Module for Laboratory',
         value: {
-          moduleId: "00000000000000000000000000000001"
+          moduleCode: 'FINANCIAL',
+          segment: 'LABORATORY'
         }
       },
       example2: {
-        summary: 'Enable HR Module',
+        summary: 'Enable HR Module for Hospital',
         value: {
-          moduleId: "00000000000000000000000000000002"
+          moduleCode: 'HR',
+          segment: 'HOSPITAL'
+        }
+      },
+      example3: {
+        summary: 'Enable Financial Module with formatting',
+        value: {
+          moduleCode: '  FINANCIAL  ', // Will be trimmed to: FINANCIAL
+          segment: 'LABORATORY'
         }
       }
     }
@@ -544,19 +557,27 @@ the system before it can be enabled.
   @Post('companies/:companyId/modules')
   async enableModule(
     @Param('companyId') companyId: string,
-    @Body() body: { moduleId: string }
+    @Body() dto: EnableCompanyModuleDto
   ) {
     this.logger.log(`Enabling module for company: ${companyId}`, 'CompanyController');
-    this.logger.log(`Request body: ${JSON.stringify(body)}`, 'CompanyController');
+    this.logger.log(`Request body: ${JSON.stringify(dto)}`, 'CompanyController');
+    this.logger.log(`DTO type: ${typeof dto}`, 'CompanyController');
+    this.logger.log(`DTO keys: ${Object.keys(dto || {})}`, 'CompanyController');
     
     try {
       this.logger.log(`Sending request to: ${this.coreServiceUrl}/companies/${companyId}/modules`, 'CompanyController');
       
       const response = await firstValueFrom(
-        this.httpService.post(`${this.coreServiceUrl}/companies/${companyId}/modules`, body)
+        this.httpService.post(`${this.coreServiceUrl}/companies/${companyId}/modules`, dto)
       );
       
       this.logger.log(`Module enabled successfully: ${JSON.stringify(response.data)}`, 'CompanyController');
+      
+      // O core-service retorna um objeto com response, então precisamos extrair os dados
+      if (response.data && response.data.response) {
+        return response.data.response;
+      }
+      
       return response.data;
     } catch (error: any) {
       this.logger.error(
@@ -567,7 +588,17 @@ the system before it can be enabled.
       
       if (error.response) {
         this.logger.error(
-          `Core service response: ${JSON.stringify(error.response.data)}`, 
+          `Core service response status: ${error.response.status}`, 
+          undefined, 
+          'CompanyController'
+        );
+        this.logger.error(
+          `Core service response data: ${JSON.stringify(error.response.data)}`, 
+          undefined, 
+          'CompanyController'
+        );
+        this.logger.error(
+          `Core service response headers: ${JSON.stringify(error.response.headers)}`, 
           undefined, 
           'CompanyController'
         );

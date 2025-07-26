@@ -14,7 +14,7 @@ export enum Industry {
     VEHICLE_REGISTRATION = 'VEHICLE_REGISTRATION',
     DRIVING_SCHOOL = 'DRIVING_SCHOOL',
   }
-
+  
   export enum CompanyStatus {
     ACTIVE = 'ACTIVE',
     INACTIVE = 'INACTIVE',

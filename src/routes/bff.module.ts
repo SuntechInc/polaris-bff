@@ -9,9 +9,10 @@ import { BranchController } from './core-service/branch.routes';
 import { JobTitleController } from './core-service/job-title.routes';
 import { JobTitleVersionController } from './core-service/job-title-versions.routes';
 import { JobTitleLevelController } from './core-service/job-title-level.routes';
+import { EmployeeController } from './core-service/employee.routes';
 
 @Module({
   imports: [HttpModule],
-  controllers: [CompanyController, BranchController, DepartmentController, JobTitleController, JobTitleVersionController, JobTitleLevelController, AuthController],
+  controllers: [CompanyController, BranchController, DepartmentController, JobTitleController, JobTitleVersionController, JobTitleLevelController, EmployeeController, AuthController],
 })
 export class BffModule {}

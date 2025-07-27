@@ -1,9 +1,5 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
-import fastifyCors from '@fastify/cors';
 import { ValidationPipe } from '@nestjs/common';
 import { GatewayModule } from './gateway.module';
 import { setupSwagger } from './config/swagger.config';
@@ -13,10 +9,7 @@ import { ValidationInterceptor } from './interceptors/validation.interceptor';
 
 async function bootstrap() {
   
-  const app = await NestFactory.create<NestFastifyApplication>(
-    GatewayModule,
-    new FastifyAdapter(),
-  );
+  const app = await NestFactory.create(GatewayModule);
   app.useLogger(app.get(CustomLogger));
 
   const jwtGuard = app.get(JwtAuthGuard);
@@ -37,12 +30,14 @@ async function bootstrap() {
   // Configurar interceptor de validação
   app.useGlobalInterceptors(new ValidationInterceptor());
 
-  setupSwagger(app);  
-
-  await app.register(fastifyCors, {
-    origin: true,                    // qualquer domínio pode chamar
-    credentials: true,            // todos os headers são permitidos
+  // Configurar CORS
+  app.enableCors({
+    origin: true,
+    credentials: true,
   });
+
+  // Configurar Swagger/ReDoc ANTES de iniciar o servidor
+  setupSwagger(app);
 
   const PORT = process.env.PORT || 3000;
   

@@ -10,8 +10,11 @@ import { JobTitleVersionController } from '@/modules/core-service/public/job-tit
 import { JobTitleLevelController } from '@/modules/core-service/public/job-title-level.controller';
 import { EmployeeController } from '@/modules/core-service/public/employee.controller';
 
+// Auth Module (needed for both public and admin docs)
+import { AuthModule } from '@/modules/auth/auth.module';
+
 @Module({
-  imports: [HttpModule, ConfigModule],
+  imports: [HttpModule, ConfigModule, AuthModule],
   controllers: [
     // Public Controllers
     BranchController,

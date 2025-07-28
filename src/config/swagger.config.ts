@@ -2,43 +2,40 @@ import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { setupRedoc } from './redoc.middleware';
 import { CoreServicePublicModule } from '@/modules/core-service/core-service-public.module';
+import { AuthModule } from '@/modules/auth/auth.module';
 
 export function setupSwagger(app: INestApplication) {
   const config = new DocumentBuilder()
-    .setTitle('Polaris BFF API Documentation')
+    .setTitle('Qualityflow API Documentation')
     .setDescription(`
-# Polaris BFF API
+# Qualityflow API
 
-Esta é a documentação completa da API do Polaris BFF (Backend for Frontend).
+This is the complete documentation of the Qualityflow API.
 
-## Autenticação
+## Authentication
 
-A maioria dos endpoints requer autenticação JWT. Para endpoints administrativos, é necessário ter permissão de **GLOBAL_ADMIN**.
+Most endpoints require JWT authentication.
 
-## Desenvolvimento Local
+## API Structure
 
-Para desenvolvimento local, você pode usar a variável de ambiente \`SKIP_AUTH=true\` para pular a autenticação.
+- **Branch**: Branch management
+- **Department**: Department management
+- **JobTitle**: Job title management
+- **JobTitleVersion**: Job title version management
+- **JobTitleLevel**: Job title level management
+- **Employee**: Employee management
+- **Auth**: Authentication and authorization
 
-## Estrutura da API
+## Filters
 
-- **Branch**: Gerenciamento de filiais
-- **Department**: Gerenciamento de departamentos
-- **JobTitle**: Gerenciamento de cargos
-- **JobTitleVersion**: Gerenciamento de versões de cargos
-- **JobTitleLevel**: Gerenciamento de níveis de cargos
-- **Employee**: Gerenciamento de funcionários
-- **Auth**: Autenticação e autorização
-
-## Filtros
-
-Muitos endpoints suportam filtros dinâmicos usando operadores como:
+Many endpoints support dynamic filters using operators like:
 - \`eq:\` (equals)
 - \`in:\` (in list)
 - \`contains:\` (contains text)
 - \`gte:\` (greater than or equal)
 - \`lte:\` (less than or equal)
 
-Exemplo: \`GET /employees/filter?companyId=123&status=eq:ACTIVE&or.name=contains:João\`
+Example: \`GET /employees/filter?companyId=123&status=eq:ACTIVE&or.name=contains:John\`
     `)
     .setVersion('1.0')
     .addBearerAuth(
@@ -52,17 +49,17 @@ Exemplo: \`GET /employees/filter?companyId=123&status=eq:ACTIVE&or.name=contains
       },
       'JWT-auth',
     )
-    .addTag('Branch', 'Gerenciamento de filiais')
-    .addTag('Department', 'Gerenciamento de departamentos')
-    .addTag('JobTitle', 'Gerenciamento de cargos')
-    .addTag('JobTitleVersion', 'Gerenciamento de versões de cargos')
-    .addTag('JobTitleLevel', 'Gerenciamento de níveis de cargos')
-    .addTag('Employee', 'Gerenciamento de funcionários')
-    .addTag('Auth', 'Autenticação e autorização')
+    .addTag('Auth', 'Authentication and authorization')
+    .addTag('Branch', 'Branch management')
+    .addTag('Department', 'Department management')
+    .addTag('JobTitle', 'Job title management')
+    .addTag('JobTitleVersion', 'Job title version management')
+    .addTag('JobTitleLevel', 'Job title level management')
+    .addTag('Employee', 'Employee management')
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {
-    include: [CoreServicePublicModule],
+    include: [CoreServicePublicModule, AuthModule],
   });
 
   // Expose Swagger JSON

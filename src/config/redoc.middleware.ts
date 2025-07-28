@@ -3,7 +3,7 @@ import redoc from 'redoc-express';
 
 export function setupRedoc(app: Express) {
   const redocOptions = {
-    title: 'Polaris BFF API Documentation',
+    title: 'Qualityflow API Documentation',
     version: '1.0',
     specUrl: '/api-json',
     theme: {

@@ -35,11 +35,9 @@ export class CompanyAdminController {
   }
 
   @ApiOperation({ 
-    summary: 'Filter companies with dynamic filters - GLOBAL_ADMIN only',
+    summary: 'Filter companies with dynamic filters',
     description: `
 This endpoint allows advanced filtering of companies using query parameters.
-
-**ADMIN ONLY**: This endpoint requires GLOBAL_ADMIN permission.
 
 How to filter:
 - All filters are passed as query parameters.
@@ -148,11 +146,9 @@ GET /companies/filter?status=eq:ACTIVE&or.tradingName=eq:Quail&or.legalName=eq:S
   }
 
   @ApiOperation({ 
-    summary: 'Create a new company - GLOBAL_ADMIN only',
+    summary: 'Create a new company',
     description: `
 Creates a new company with automatic data transformation and validation.
-
-**ADMIN ONLY**: This endpoint requires GLOBAL_ADMIN permission.
 
 **Data Transformations:**
 - Trading name and legal name: automatic trim
@@ -253,11 +249,9 @@ Creates a new company with automatic data transformation and validation.
   }
 
   @ApiOperation({ 
-    summary: 'Update company - GLOBAL_ADMIN only',
+    summary: 'Update company',
     description: `
 Updates an existing company with automatic data transformation and validation.
-
-**ADMIN ONLY**: This endpoint requires GLOBAL_ADMIN permission.
 
 **Data Transformations:**
 - Trading name and legal name: automatic trim
@@ -327,11 +321,9 @@ Updates an existing company with automatic data transformation and validation.
   }
 
   @ApiOperation({ 
-    summary: 'List available modules - GLOBAL_ADMIN only',
+    summary: 'List available modules',
     description: `
 Lists all available modules that can be enabled for companies.
-
-**ADMIN ONLY**: This endpoint requires GLOBAL_ADMIN permission.
     `
   })
   @ApiOkResponse({
@@ -387,11 +379,9 @@ Lists all available modules that can be enabled for companies.
   }
 
   @ApiOperation({ 
-    summary: 'List company modules - GLOBAL_ADMIN only',
+    summary: 'List company modules',
     description: `
 Lists all modules enabled for a specific company.
-
-**ADMIN ONLY**: This endpoint requires GLOBAL_ADMIN permission.
     `
   })
   @ApiParam({ name: 'companyId', type: String, example: '123', description: 'Company ID' })
@@ -454,11 +444,9 @@ Lists all modules enabled for a specific company.
   }
 
   @ApiOperation({ 
-    summary: 'Enable module for company - GLOBAL_ADMIN only',
+    summary: 'Enable module for company',
     description: `
 Enables a specific module for a company.
-
-**ADMIN ONLY**: This endpoint requires GLOBAL_ADMIN permission.
 
 **Required fields:**
 - moduleCode: The module code to enable

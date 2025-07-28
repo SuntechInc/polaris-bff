@@ -2,46 +2,48 @@ import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { setupRedoc } from './redoc.middleware';
 import { CoreServiceAdminModule } from '@/modules/core-service/core-service-admin.module';
-import { CompanyAdminController } from '@/modules/core-service/admin/company-admin.controller';
+import { AuthModule } from '@/modules/auth/auth.module';
 
 export function setupAdminDocs(app: INestApplication) {
   const config = new DocumentBuilder()
-    .setTitle('Polaris BFF - Company Management API')
+    .setTitle('Qualityflow - Administration Management API')
     .setDescription(`
-# Polaris BFF - Company Management API
+# Qualityflow - Administration Management API
 
-Esta é a documentação dos endpoints de gerenciamento de empresas do Polaris BFF (Backend for Frontend).
+## ⚠️ Restricted Access
 
-## ⚠️ Acesso Restrito
+**ATTENTION**: All endpoints in this documentation require **GLOBAL_ADMIN** permission.
 
-**ATENÇÃO**: Todos os endpoints nesta documentação requerem permissão de **GLOBAL_ADMIN**.
+## Authentication
 
-## Autenticação
-
-- **JWT Token**: Obrigatório em todos os endpoints
+- **JWT Token**: Required in all endpoints
 - **Role**: GLOBAL_ADMIN
-- **Desenvolvimento Local**: Use \`SKIP_AUTH=true\` no .env para pular autenticação
+- **Local Development**: Use \`SKIP_AUTH=true\` in .env to bypass authentication
 
-## Endpoints Disponíveis
+## Available Endpoints
+
+### Authentication
+- **POST** \`/auth/login\` - User login
+- **GET** \`/auth/profile\` - Authenticated user profile
 
 ### Company Management
-- **GET** \`/companies/filter\` - Filtrar empresas
-- **POST** \`/company\` - Criar nova empresa
-- **PUT** \`/companies/:id\` - Atualizar empresa
-- **GET** \`/companies/modules\` - Listar módulos disponíveis
-- **GET** \`/companies/:companyId/modules\` - Listar módulos da empresa
-- **POST** \`/companies/:companyId/modules\` - Ativar módulo para empresa
+- **GET** \`/companies/filter\` - Filter companies
+- **POST** \`/company\` - Create new company
+- **PUT** \`/companies/:id\` - Update company
+- **GET** \`/companies/modules\` - List available modules
+- **GET** \`/companies/:companyId/modules\` - List modules for company
+- **POST** \`/companies/:companyId/modules\` - Activate module for company
 
-## Filtros Disponíveis
+## Available Filters
 
-Todos os endpoints de filtro suportam operadores dinâmicos:
+All filter endpoints support dynamic operators:
 - \`eq:\` (equals)
 - \`in:\` (in list)
 - \`contains:\` (contains text)
 - \`gte:\` (greater than or equal)
 - \`lte:\` (less than or equal)
 
-Exemplo: \`GET /companies/filter?status=eq:ACTIVE&or.tradingName=contains:Tech\`
+Example: \`GET /companies/filter?status=eq:ACTIVE&or.tradingName=contains:Tech\`
     `)
     .setVersion('1.0')
     .addBearerAuth(
@@ -55,11 +57,12 @@ Exemplo: \`GET /companies/filter?status=eq:ACTIVE&or.tradingName=contains:Tech\`
       },
       'JWT-auth',
     )
-    .addTag('Company', 'Gerenciamento administrativo de empresas')
+    .addTag('Auth', 'Authentication and authorization')
+    .addTag('Company', 'Administrative management of companies')
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {
-    include: [CoreServiceAdminModule],
+    include: [CoreServiceAdminModule, AuthModule],
   });
 
   // Expose Admin Swagger JSON
@@ -75,7 +78,7 @@ Exemplo: \`GET /companies/filter?status=eq:ACTIVE&or.tradingName=contains:Tech\`
 
 function setupAdminRedoc(app: any) {
   const redocOptions = {
-    title: 'Polaris BFF - Company Management API',
+    title: 'Qualityflow - Administration Management API',
     version: '1.0',
     specUrl: '/admin-api-json',
     theme: {

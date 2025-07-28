@@ -16,6 +16,14 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@/*": ["src/*"],
+      "@/modules/*": ["src/modules/*"],
+      "@/routes/*": ["src/routes/*"],
+      "@/guards/*": ["src/guards/*"],
+      "@/config/*": ["src/config/*"],
+      "@/dto/*": ["src/routes/core-service/dto/*"]
+    }
   }
 }

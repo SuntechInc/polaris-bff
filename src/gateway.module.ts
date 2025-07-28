@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
-import { BffModule } from './routes/bff.module';
-import { HealthController } from './healthz/healthz.controller';
+import { CoreServicePublicModule } from '@/modules/core-service/core-service-public.module';
+import { CoreServiceAdminModule } from '@/modules/core-service/core-service-admin.module';
+import { HealthController } from '@/healthz/healthz.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { JwtModule } from '@nestjs/jwt';
-import { getJwtConfig } from './config/jwt.config';
-import { JwtAuthGuard } from './guards/jwt.guard';
-import { AdminGuard } from './guards/admin.guard';
+import { getJwtConfig } from '@/config/jwt.config';
+import { JwtAuthGuard } from '@/guards/jwt.guard';
+import { AdminGuard } from '@/guards/admin.guard';
 import { LoggerModule } from 'nestjs-pino';
-import { CustomLogger } from './custom.logger';
+import { CustomLogger } from '@/custom.logger';
 
 @Module({
   imports: [
@@ -28,7 +29,9 @@ import { CustomLogger } from './custom.logger';
       useFactory: getJwtConfig,
       inject: [ConfigService],
     }),
-    BffModule],
+    CoreServicePublicModule,
+    CoreServiceAdminModule,
+  ],
   controllers: [HealthController],
   providers: [JwtAuthGuard, AdminGuard, CustomLogger],
   exports: [CustomLogger],

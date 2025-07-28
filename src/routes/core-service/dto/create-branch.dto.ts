@@ -102,12 +102,7 @@ export class CreateBranchGatewayDto {
   @IsEnum(BranchStatus)
   status: BranchStatus;
 
-  @ApiProperty({
-    description: 'Company ID',
-    example: '00000000-0000-0000-0000-000000000000'
-  })
-  @IsString({ message: 'Company ID must be a string' })
-  companyId: string;
+  // Company ID is automatically handled by the system
 
   @ApiProperty({
     description: 'Address ID',

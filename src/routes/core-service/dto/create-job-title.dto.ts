@@ -24,14 +24,7 @@ export class CreateJobTitleGatewayDto {
   @Transform(({ value }) => value?.trim())
   description?: string;
 
-  @ApiProperty({ 
-    example: '00000000-0000-0000-0000-000000000000', 
-    description: 'Company ID',
-    required: true
-  })
-  @IsString()
-  @IsNotEmpty({ message: 'Company ID is required' })
-  companyId: string;
+  // Company ID is automatically handled by the system
 
   @ApiProperty({ 
     example: 'DEV-SR', 

@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiTags, ApiParam, ApiBody, ApiQuery, ApiOkResponse } from '@nestjs/swagger';
 import { CreateJobTitleGatewayDto } from '@/dto/create-job-title.dto';
 import { UpdateJobTitleGatewayDto } from '@/dto/update-job-title.dto';
+import { ActionCompanyId } from '@/decorators/action-company-id.decorator';
 
 @ApiTags('JobTitle')
 @Controller('job-titles')
@@ -51,10 +52,10 @@ Supported operators:
 Examples:
 
 Simple filter (AND):
-GET /job-titles/filter?companyId=123&status=eq:ACTIVE
+GET /job-titles/filter?status=eq:ACTIVE
 
 Combined filter (AND + OR):
-GET /job-titles/filter?companyId=123&status=eq:ACTIVE&or.name=contains:Manager&or.description=contains:Senior
+GET /job-titles/filter?status=eq:ACTIVE&or.name=contains:Manager&or.description=contains:Senior
     `
   })
   @ApiOkResponse({
@@ -83,13 +84,7 @@ GET /job-titles/filter?companyId=123&status=eq:ACTIVE&or.name=contains:Manager&o
       }
     }
   })
-  @ApiQuery({ 
-    name: 'companyId', 
-    required: true, 
-    type: String, 
-    description: 'Company ID (required)',
-    example: '00000000-0000-0000-0000-000000000000'
-  })
+
   @ApiQuery({ 
     name: 'page', 
     required: false, 
@@ -126,14 +121,14 @@ GET /job-titles/filter?companyId=123&status=eq:ACTIVE&or.name=contains:Manager&o
   })
   @HttpCode(HttpStatus.OK)
   @Get('filter')
-  async filterJobTitles(@Query() query: Record<string, any>) {
+  async filterJobTitles(
+    @Query() query: Record<string, any>,
+    @ActionCompanyId() actionCompanyId: string
+  ) {
     try {
-      // Validate if companyId was provided
+      // Use actionCompanyId from JWT token if companyId not provided in query
       if (!query.companyId) {
-        throw new HttpException(
-          { message: 'companyId is required to filter job titles' }, 
-          HttpStatus.BAD_REQUEST
-        );
+        query.companyId = actionCompanyId;
       }
 
       console.log('Forwarding params to core-service:', query);
@@ -169,14 +164,23 @@ GET /job-titles/filter?companyId=123&status=eq:ACTIVE&or.name=contains:Manager&o
   })
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createJobTitle(@Body() dto: CreateJobTitleGatewayDto) {
+  async createJobTitle(
+    @Body() dto: CreateJobTitleGatewayDto,
+    @ActionCompanyId() actionCompanyId: string
+  ) {
     this.logger.log(`Trying to create job title: ${JSON.stringify(dto)}`, 'JobTitleController');
     
     try {
+      // Add companyId from JWT token to the payload
+      const payload = {
+        ...dto,
+        companyId: actionCompanyId
+      };
+      
       this.logger.log(`Sending request to: ${this.coreServiceUrl}/job-titles`, 'JobTitleController');
       
       const response = await firstValueFrom(
-        this.httpService.post(`${this.coreServiceUrl}/job-titles`, dto),
+        this.httpService.post(`${this.coreServiceUrl}/job-titles`, payload),
       );
       
       this.logger.log(`Job title created successfully: ${JSON.stringify(response.data)}`, 'JobTitleController');

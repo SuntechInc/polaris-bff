@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiTags, ApiParam, ApiBody, ApiQuery, ApiOkResponse } from '@nestjs/swagger';
 import { CreateDepartmentGatewayDto } from '@/dto/create-department.dto';
 import { UpdateDepartmentGatewayDto } from '@/dto/update-department.dto';
+import { ActionCompanyId } from '@/decorators/action-company-id.decorator';
 
 @ApiTags('Department')
 @Controller('departments')
@@ -51,10 +52,10 @@ Supported operators:
 Examples:
 
 Simple filter (AND):
-GET /departments/filter?companyId=123&status=eq:ACTIVE
+GET /departments/filter?status=eq:ACTIVE
 
 Combined filter (AND + OR):
-GET /departments/filter?companyId=123&status=eq:ACTIVE&or.name=contains:Engineering&or.code=eq:DEPT001
+GET /departments/filter?status=eq:ACTIVE&or.name=contains:Engineering&or.code=eq:DEPT001
     `
   })
   @ApiOkResponse({
@@ -85,13 +86,7 @@ GET /departments/filter?companyId=123&status=eq:ACTIVE&or.name=contains:Engineer
       }
     }
   })
-  @ApiQuery({ 
-    name: 'companyId', 
-    required: true, 
-    type: String, 
-    description: 'Company ID (required)',
-    example: '00000000-0000-0000-0000-000000000000'
-  })
+
   @ApiQuery({ 
     name: 'page', 
     required: false, 
@@ -128,14 +123,14 @@ GET /departments/filter?companyId=123&status=eq:ACTIVE&or.name=contains:Engineer
   })
   @HttpCode(HttpStatus.OK)
   @Get('filter')
-  async filterDepartments(@Query() query: Record<string, any>) {
+  async filterDepartments(
+    @Query() query: Record<string, any>,
+    @ActionCompanyId() actionCompanyId: string
+  ) {
     try {
-      // Validate if companyId was provided
+      // Use actionCompanyId from JWT token if companyId not provided in query
       if (!query.companyId) {
-        throw new HttpException(
-          { message: 'companyId is required to filter departments' }, 
-          HttpStatus.BAD_REQUEST
-        );
+        query.companyId = actionCompanyId;
       }
 
       console.log('Forwarding params to core-service:', query);
@@ -173,14 +168,23 @@ GET /departments/filter?companyId=123&status=eq:ACTIVE&or.name=contains:Engineer
   })
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createDepartment(@Body() dto: CreateDepartmentGatewayDto) {
+  async createDepartment(
+    @Body() dto: CreateDepartmentGatewayDto,
+    @ActionCompanyId() actionCompanyId: string
+  ) {
     this.logger.log(`Trying to create department: ${JSON.stringify(dto)}`, 'DepartmentController');
     
     try {
+      // Add companyId from JWT token to the payload
+      const payload = {
+        ...dto,
+        companyId: actionCompanyId
+      };
+      
       this.logger.log(`Sending request to: ${this.coreServiceUrl}/departments`, 'DepartmentController');
       
       const response = await firstValueFrom(
-        this.httpService.post(`${this.coreServiceUrl}/departments`, dto),
+        this.httpService.post(`${this.coreServiceUrl}/departments`, payload),
       );
       
       this.logger.log(`Department created successfully: ${JSON.stringify(response.data)}`, 'DepartmentController');

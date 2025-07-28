@@ -81,7 +81,7 @@ function setupAdminRedoc(app: any) {
     title: 'Qualityflow - Administration Management API',
     version: '1.0',
     specUrl: '/admin-api-json',
-git             theme: {
+        theme: {
           typography: { 
             fontFamily: 'Inter, sans-serif',
             fontSize: '14px',

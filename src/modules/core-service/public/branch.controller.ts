@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiTags, ApiParam, ApiBody, ApiQuery, ApiOkResponse } from '@nestjs/swagger';
 import { CreateBranchGatewayDto } from '@/dto/create-branch.dto';
 import { UpdateBranchGatewayDto } from '@/dto/update-branch.dto';
+import { ActionCompanyId } from '@/decorators/action-company-id.decorator';
 
 @ApiTags('Branch')
 @Controller('branches')
@@ -50,17 +51,16 @@ Supported operators:
 Examples:
 
 Simple filter (AND):
-GET /branches/filter?companyId=123&status=eq:ACTIVE&isHeadquarter=eq:true
+GET /branches/filter?status=eq:ACTIVE&isHeadquarter=eq:true
 
 Combined filter (AND + OR):
-GET /branches/filter?companyId=123&status=eq:ACTIVE&or.name=eq:Center&or.code=eq:BR001
+GET /branches/filter?status=eq:ACTIVE&or.tradingName=eq:Center&or.code=eq:BR001
 
 Example using axios:
 axios.get('/branches/filter', {
   params: {
-    companyId: '123',
     status: 'eq:ACTIVE',
-    'or.name': 'eq:Center',
+    'or.tradingName': 'eq:Center',
     'or.code': 'eq:BR001',
     page: 1,
     size: 20
@@ -99,10 +99,9 @@ axios.get('/branches/filter', {
           hasPrevious: false
         },
         filter: {
-          applied: '{"$and":[{"companyId":{"$eq":"123"}},{"status":{"$eq":"ACTIVE"}},{"$or":[{"tradingName":{"$eq":"Branch XPTO"}},{"legalName":{"$eq":"Branch XPTO LTDA"}}]}]}',
+          applied: '{"$and":[{"status":{"$eq":"ACTIVE"}},{"$or":[{"tradingName":{"$eq":"Branch XPTO"}},{"legalName":{"$eq":"Branch XPTO LTDA"}}]}]}',
           parsed: {
             $and: [
-              { companyId: { $eq: "123" } },
               { status: { $eq: "ACTIVE" } },
               { $or: [
                 { tradingName: { $eq: "Branch XPTO" } },
@@ -114,13 +113,7 @@ axios.get('/branches/filter', {
       }
     }
   })
-  @ApiQuery({ 
-    name: 'companyId', 
-    required: true, 
-    type: String, 
-    description: 'Company ID (required)',
-    example: '00000000-0000-0000-0000-000000000000'
-  })
+
   @ApiQuery({ 
     name: 'page', 
     required: false, 
@@ -157,14 +150,14 @@ axios.get('/branches/filter', {
   })
   @HttpCode(HttpStatus.OK)
   @Get('filter')
-  async filterBranches(@Query() query: Record<string, any>) {
+  async filterBranches(
+    @Query() query: Record<string, any>,
+    @ActionCompanyId() actionCompanyId: string
+  ) {
     try {
-      // Validate if companyId was provided
+      // Use actionCompanyId from JWT token if companyId not provided in query
       if (!query.companyId) {
-        throw new HttpException(
-          { message: 'companyId is required to filter branches' }, 
-          HttpStatus.BAD_REQUEST
-        );
+        query.companyId = actionCompanyId;
       }
 
       console.log('Forwarding params to core-service:', query);
@@ -191,14 +184,14 @@ axios.get('/branches/filter', {
         summary: 'Default example',
         value: {
           taxId: '12345678000199',
-          name: 'Center Branch',
+          tradingName: 'Center Branch',
+          legalName: 'Center Branch LTDA',
           code: 'BR001',
           email: 'contact@branch.com',
           phone: '+55 11 99999-9999',
           responsible: 'John Doe',
           isHeadquarter: false,
           status: 'ACTIVE',
-          companyId: '00000000-0000-0000-0000-000000000000',
           addressId: '00000000-0000-0000-0000-000000000000'
         },
       },
@@ -206,14 +199,23 @@ axios.get('/branches/filter', {
   })
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createBranch(@Body() dto: CreateBranchGatewayDto) {
+  async createBranch(
+    @Body() dto: CreateBranchGatewayDto,
+    @ActionCompanyId() actionCompanyId: string
+  ) {
     this.logger.log(`Trying to create branch: ${JSON.stringify(dto)}`, 'BranchController');
     
     try {
+      // Add companyId from JWT token to the payload
+      const payload = {
+        ...dto,
+        companyId: actionCompanyId
+      };
+      
       this.logger.log(`Sending request to: ${this.coreServiceUrl}/branches`, 'BranchController');
       
       const response = await firstValueFrom(
-        this.httpService.post(`${this.coreServiceUrl}/branches`, dto),
+        this.httpService.post(`${this.coreServiceUrl}/branches`, payload),
       );
       
       this.logger.log(`Branch created successfully: ${JSON.stringify(response.data)}`, 'BranchController');
@@ -298,10 +300,10 @@ axios.get('/branches/filter', {
     }
   }
 
-  @ApiOperation({ summary: 'Soft delete a branch (set status to INACTIVE)' })
+  @ApiOperation({ summary: 'Delete a branch' })
   @ApiParam({ name: 'id', type: String, example: '123', description: 'Branch ID' })
   @ApiOkResponse({
-    description: 'Branch with status updated to INACTIVE',
+    description: 'Branch deleted successfully',
     schema: {
       example: {
         id: "00000000000000000000000000000000",

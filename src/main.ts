@@ -1,11 +1,12 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { GatewayModule } from './gateway.module';
-import { setupSwagger } from './config/swagger.config';
-import { JwtAuthGuard } from './guards/jwt.guard';
-import { CustomLogger } from './custom.logger';
-import { ValidationInterceptor } from './interceptors/validation.interceptor';
+import { GatewayModule } from '@/gateway.module';
+import { setupSwagger } from '@/config/swagger.config';
+import { setupAdminDocs } from '@/config/admin-docs.config';
+import { JwtAuthGuard } from '@/guards/jwt.guard';
+import { CustomLogger } from '@/custom.logger';
+import { ValidationInterceptor } from '@/interceptors/validation.interceptor';
 
 async function bootstrap() {
   
@@ -38,6 +39,7 @@ async function bootstrap() {
 
   // Configurar Swagger/ReDoc ANTES de iniciar o servidor
   setupSwagger(app);
+  setupAdminDocs(app);
 
   const PORT = process.env.PORT || 3000;
   

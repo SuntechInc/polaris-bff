@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { setupRedoc } from './redoc.middleware';
+import { CoreServicePublicModule } from '@/modules/core-service/core-service-public.module';
 
 export function setupSwagger(app: INestApplication) {
   const config = new DocumentBuilder()
@@ -20,7 +21,6 @@ Para desenvolvimento local, você pode usar a variável de ambiente \`SKIP_AUTH=
 
 ## Estrutura da API
 
-- **Company**: Gerenciamento de empresas e módulos
 - **Branch**: Gerenciamento de filiais
 - **Department**: Gerenciamento de departamentos
 - **JobTitle**: Gerenciamento de cargos
@@ -52,7 +52,6 @@ Exemplo: \`GET /employees/filter?companyId=123&status=eq:ACTIVE&or.name=contains
       },
       'JWT-auth',
     )
-    .addTag('Company', 'Gerenciamento de empresas e módulos')
     .addTag('Branch', 'Gerenciamento de filiais')
     .addTag('Department', 'Gerenciamento de departamentos')
     .addTag('JobTitle', 'Gerenciamento de cargos')
@@ -62,7 +61,9 @@ Exemplo: \`GET /employees/filter?companyId=123&status=eq:ACTIVE&or.name=contains
     .addTag('Auth', 'Autenticação e autorização')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config, {
+    include: [CoreServicePublicModule],
+  });
 
   // Expose Swagger JSON
   app.use('/api-json', (_req, res) => res.json(document));

@@ -21,7 +21,7 @@ import { ApiBody, ApiOperation, ApiTags, ApiParam, ApiQuery, ApiOkResponse } fro
 import { AdminGuard } from '@/guards/admin.guard';
 
 @ApiTags('Company')
-@Controller('companies')
+@Controller()
 export class CompanyAdminController {
   private readonly coreServiceUrl: string;
   private readonly logger = new Logger(CompanyAdminController.name);

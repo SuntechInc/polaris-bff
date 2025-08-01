@@ -15,7 +15,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { ApiOperation, ApiTags, ApiParam, ApiBody, ApiQuery, ApiOkResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiParam, ApiBody, ApiQuery, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { CreateDepartmentGatewayDto } from '@/dto/create-department.dto';
 import { UpdateDepartmentGatewayDto } from '@/dto/update-department.dto';
 import { ActionCompanyId } from '@/decorators/action-company-id.decorator';
@@ -149,7 +149,42 @@ GET /departments/filter?status=eq:ACTIVE&or.name=contains:Engineering&or.code=eq
     }
   }
 
-  @ApiOperation({ summary: 'Create a new department' })
+  @ApiOperation({ 
+    summary: 'Create a new department',
+    description: `
+Creates a new department for the authenticated company.
+
+**Required fields:**
+- name: Department name (minimum 3 characters)
+- status: Department status (ACTIVE, INACTIVE, SUSPENDED, OBSOLETE)
+- branchId: ID of the branch this department belongs to
+
+**Optional fields:**
+- description: Department description
+- code: Department code (minimum 3 characters)
+- responsibleName: Name of the person responsible
+- responsibleEmail: Email of the person responsible
+
+**Features:**
+- Automatically associates the department with the company from JWT token
+- Validates all required fields
+- Returns complete department information including generated ID and timestamps
+    `
+  })
+  @ApiCreatedResponse({
+    description: 'Department created successfully',
+    schema: {
+      example: {
+        id: "cmdqujqbe0007i0is1q0qk0os",
+        name: "Engineering",
+        description: "Software Engineering Department",
+        status: "ACTIVE",
+        branchId: "cmdqtvliz0005i0isxzsqes2x",
+        createdAt: "2025-07-31T03:40:10.094Z",
+        updatedAt: "2025-07-31T03:40:10.094Z"
+      }
+    }
+  })
   @ApiBody({
     type: CreateDepartmentGatewayDto,
     examples: {
@@ -159,9 +194,30 @@ GET /departments/filter?status=eq:ACTIVE&or.name=contains:Engineering&or.code=eq
           name: 'Engineering',
           code: 'DEPT001',
           description: 'Software Engineering Department',
+          responsibleName: 'John Doe',
+          responsibleEmail: 'john.doe@company.com',
           status: 'ACTIVE',
-          companyId: '00000000-0000-0000-0000-000000000000',
-          branchId: '00000000-0000-0000-0000-000000000000'
+          branchId: 'cmdqtvliz0005i0isxzsqes2x'
+        },
+      },
+      example2: {
+        summary: 'Minimal department creation',
+        value: {
+          name: 'Finance',
+          status: 'ACTIVE',
+          branchId: 'cmdqtvliz0005i0isxzsqes2x'
+        },
+      },
+      example3: {
+        summary: 'Department with all fields',
+        value: {
+          name: 'Human Resources',
+          code: 'HR001',
+          description: 'Human Resources Department',
+          responsibleName: 'Jane Smith',
+          responsibleEmail: 'jane.smith@company.com',
+          status: 'ACTIVE',
+          branchId: 'cmdqtvliz0005i0isxzsqes2x'
         },
       },
     },
@@ -210,8 +266,32 @@ GET /departments/filter?status=eq:ACTIVE&or.name=contains:Engineering&or.code=eq
     }
   }
 
-  @ApiOperation({ summary: 'Update department' })
+  @ApiOperation({ 
+    summary: 'Update department',
+    description: `
+Updates an existing department with the provided data.
+
+**Features:**
+- Validates all fields before updating
+- Returns complete updated department information
+- Maintains audit trail with updatedAt timestamp
+    `
+  })
   @ApiParam({ name: 'id', type: String, example: '123', description: 'Department ID' })
+  @ApiOkResponse({
+    description: 'Department updated successfully',
+    schema: {
+      example: {
+        id: "cmdqujqbe0007i0is1q0qk0os",
+        name: "Software Engineering",
+        description: "Updated Software Engineering Department",
+        status: "ACTIVE",
+        branchId: "cmdqtvliz0005i0isxzsqes2x",
+        createdAt: "2025-07-31T03:40:10.094Z",
+        updatedAt: "2025-07-31T03:42:15.123Z"
+      }
+    }
+  })
   @ApiBody({
     type: UpdateDepartmentGatewayDto,
     examples: {
@@ -221,6 +301,8 @@ GET /departments/filter?status=eq:ACTIVE&or.name=contains:Engineering&or.code=eq
           name: 'Software Engineering',
           code: 'DEPT001',
           description: 'Updated Software Engineering Department',
+          responsibleName: 'John Doe',
+          responsibleEmail: 'john.doe@company.com',
           status: 'ACTIVE'
         },
       },
@@ -264,21 +346,29 @@ GET /departments/filter?status=eq:ACTIVE&or.name=contains:Engineering&or.code=eq
     }
   }
 
-  @ApiOperation({ summary: 'Delete a department' })
+  @ApiOperation({ 
+    summary: 'Delete a department',
+    description: `
+Soft deletes a department by setting its status to INACTIVE.
+
+**Features:**
+- Performs soft delete (sets status to INACTIVE)
+- Returns the updated department information
+- Maintains data integrity and audit trail
+    `
+  })
   @ApiParam({ name: 'id', type: String, example: '123', description: 'Department ID' })
   @ApiOkResponse({
-    description: 'Department deleted successfully',
+    description: 'Department deleted successfully (soft delete)',
     schema: {
       example: {
-        id: "00000000000000000000000000000000",
+        id: "cmdqujqbe0007i0is1q0qk0os",
         name: "Engineering",
-        code: "DEPT001",
         description: "Software Engineering Department",
         status: "INACTIVE",
-        companyId: "00000000000000000000000000000000",
-        branchId: "00000000000000000000000000000000",
-        createdAt: "2025-06-23T23:32:29.601Z",
-        updatedAt: "2025-06-23T23:32:29.601Z"
+        branchId: "cmdqtvliz0005i0isxzsqes2x",
+        createdAt: "2025-07-31T03:40:10.094Z",
+        updatedAt: "2025-07-31T03:45:10.456Z"
       }
     }
   })

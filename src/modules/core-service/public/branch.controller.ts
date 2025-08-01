@@ -15,9 +15,10 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { ApiOperation, ApiTags, ApiParam, ApiBody, ApiQuery, ApiOkResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiParam, ApiBody, ApiQuery, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { CreateBranchGatewayDto } from '@/dto/create-branch.dto';
 import { UpdateBranchGatewayDto } from '@/dto/update-branch.dto';
+import { BranchResponseDto } from '@/dto/branch-response.dto';
 import { ActionCompanyId } from '@/decorators/action-company-id.decorator';
 
 @ApiTags('Branch')
@@ -176,7 +177,38 @@ axios.get('/branches/filter', {
     }
   }
 
-  @ApiOperation({ summary: 'Create a new branch' })
+  @ApiOperation({ 
+    summary: 'Create a new branch',
+    description: `
+Creates a new branch for the authenticated company.
+
+**Features:**
+- Automatically associates the branch with the company from JWT token
+- Validates all required fields
+- Returns complete branch information including generated ID and timestamps
+    `
+  })
+  @ApiCreatedResponse({
+    description: 'Branch created successfully',
+    type: BranchResponseDto,
+    schema: {
+      example: {
+        id: "cmdqtvliz0005i0isxzsqes2x",
+        taxId: "12345678000199",
+        tradingName: "Center Branch",
+        legalName: "Center Branch LTDA",
+        code: "BR001",
+        email: "contact@branch.com",
+        phone: "+55 11 99999-9999",
+        responsible: "John Doe",
+        isHeadquarter: false,
+        status: "ACTIVE",
+        companyId: "cmcwpsyye000010mbjdk0azaw",
+        createdAt: "2025-07-31T03:21:24.155Z",
+        updatedAt: "2025-07-31T03:21:24.155Z"
+      }
+    }
+  })
   @ApiBody({
     type: CreateBranchGatewayDto,
     examples: {
@@ -213,6 +245,8 @@ axios.get('/branches/filter', {
       };
       
       this.logger.log(`Sending request to: ${this.coreServiceUrl}/branches`, 'BranchController');
+
+      this.logger.log(`Payload: ${JSON.stringify(payload)}`, 'BranchController');
       
       const response = await firstValueFrom(
         this.httpService.post(`${this.coreServiceUrl}/branches`, payload),
@@ -241,8 +275,39 @@ axios.get('/branches/filter', {
     }
   }
 
-  @ApiOperation({ summary: 'Update branch' })
+  @ApiOperation({ 
+    summary: 'Update branch',
+    description: `
+Updates an existing branch with the provided data.
+
+**Features:**
+- Validates all fields before updating
+- Returns complete updated branch information
+- Maintains audit trail with updatedAt timestamp
+    `
+  })
   @ApiParam({ name: 'id', type: String, example: '123', description: 'Branch ID' })
+  @ApiOkResponse({
+    description: 'Branch updated successfully',
+    type: BranchResponseDto,
+    schema: {
+      example: {
+        id: "cmdqtvliz0005i0isxzsqes2x",
+        taxId: "12345678000199",
+        tradingName: "Updated Center Branch",
+        legalName: "Updated Center Branch LTDA",
+        code: "BR001",
+        email: "newemail@branch.com",
+        phone: "+55 11 98888-8888",
+        responsible: "Jane Smith",
+        isHeadquarter: false,
+        status: "ACTIVE",
+        companyId: "cmcwpsyye000010mbjdk0azaw",
+        createdAt: "2025-07-31T03:21:24.155Z",
+        updatedAt: "2025-07-31T03:22:15.123Z"
+      }
+    }
+  })
   @ApiBody({
     type: UpdateBranchGatewayDto,
     examples: {
@@ -250,7 +315,8 @@ axios.get('/branches/filter', {
         summary: 'Update example',
         value: {
           taxId: '12345678000199',
-          name: 'Updated Center Branch',
+          tradingName: 'Updated Center Branch',
+          legalName: 'Updated Center Branch LTDA',
           code: 'BR001',
           email: 'newemail@branch.com',
           phone: '+55 11 98888-8888',
@@ -300,25 +366,36 @@ axios.get('/branches/filter', {
     }
   }
 
-  @ApiOperation({ summary: 'Delete a branch' })
+  @ApiOperation({ 
+    summary: 'Delete a branch',
+    description: `
+Soft deletes a branch by setting its status to INACTIVE.
+
+**Features:**
+- Performs soft delete (sets status to INACTIVE)
+- Returns the updated branch information
+- Maintains data integrity and audit trail
+    `
+  })
   @ApiParam({ name: 'id', type: String, example: '123', description: 'Branch ID' })
   @ApiOkResponse({
-    description: 'Branch deleted successfully',
+    description: 'Branch deleted successfully (soft delete)',
+    type: BranchResponseDto,
     schema: {
       example: {
-        id: "00000000000000000000000000000000",
+        id: "cmdqtvliz0005i0isxzsqes2x",
         taxId: "12345678000199",
-        name: "Center Branch",
+        tradingName: "Center Branch",
+        legalName: "Center Branch LTDA",
         code: "BR001",
         email: "contact@branch.com",
         phone: "+55 11 99999-9999",
         responsible: "John Doe",
-        isHeadquarter: true,
+        isHeadquarter: false,
         status: "INACTIVE",
-        companyId: "00000000000000000000000000000000",
-        addressId: "00000000000000000000000000000000",
-        createdAt: "2025-06-23T23:32:29.601Z",
-        updatedAt: "2025-06-23T23:32:29.601Z"
+        companyId: "cmcwpsyye000010mbjdk0azaw",
+        createdAt: "2025-07-31T03:21:24.155Z",
+        updatedAt: "2025-07-31T03:25:10.456Z"
       }
     }
   })

@@ -17,7 +17,8 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { CreateCompanyGatewayDto } from '@/dto/create-company.dto';
 import { EnableCompanyModuleDto } from '@/dto/enable-company-module.dto';
-import { ApiBody, ApiOperation, ApiTags, ApiParam, ApiQuery, ApiOkResponse } from '@nestjs/swagger';
+import { CompanyResponseDto } from '@/dto/company-response.dto';
+import { ApiBody, ApiOperation, ApiTags, ApiParam, ApiQuery, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { AdminGuard } from '@/guards/admin.guard';
 
 @ApiTags('Company')
@@ -168,6 +169,26 @@ Creates a new company with automatic data transformation and validation.
 - Status: defaults to ACTIVE
 - isBaseCompany: defaults to false
     `
+  })
+  @ApiCreatedResponse({
+    description: 'Company created successfully',
+    type: CompanyResponseDto,
+    schema: {
+      example: {
+        id: "cmdqsfyci0000i063yo119vge",
+        tradingName: "Empresa Teste LTDA",
+        legalName: "Empresa Teste Comércio e Serviços LTDA",
+        taxId: "12345678000199",
+        taxCountry: "BR",
+        email: "contato@empresateste.com.br",
+        phone: "(11) 99999-9999",
+        industry: "TECHNOLOGY",
+        segment: "HOSPITAL",
+        status: "ACTIVE",
+        createdAt: "2025-07-31T02:41:14.658Z",
+        updatedAt: "2025-07-31T02:41:14.658Z"
+      }
+    }
   })
   @ApiBody({
     type: CreateCompanyGatewayDto,
